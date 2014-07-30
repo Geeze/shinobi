@@ -18,6 +18,7 @@ Player.prototype.act = function(){
 Player.prototype.handleEvent = function(e){
 	//Define keys.
 	var keyMap = {};
+	//ARROWS
 	keyMap[38] = 0; //UP
 	keyMap[33] = 1; //UPRIGHT
 	keyMap[39] = 2; //And so on
@@ -26,7 +27,18 @@ Player.prototype.handleEvent = function(e){
 	keyMap[35] = 5;
 	keyMap[37] = 6;
 	keyMap[36] = 7;
+	//NUMPAD
+	keyMap[104] = 0; //UP
+	keyMap[105] = 1; //UPRIGHT
+	keyMap[102] = 2; //And so on
+	keyMap[99] = 3;
+	keyMap[98] = 4;
+	keyMap[97] = 5;
+	keyMap[100] = 6;
+	keyMap[103] = 7;
 
+	
+	
 	var code = e.keyCode;
 	if(!(code in keyMap)){ return;} //Dont do anything if invalid key is pressed.
 
@@ -50,6 +62,18 @@ Player.prototype.handleEvent = function(e){
 				return;
 			}
 		}
+		//This is the part where we stun the guards
+		var me = this;
+		Game.guards.forEach(function(g){
+			if(g.x == newX && g.y == newY){
+				g.state = "stunned";
+				g.stuntime = 5;
+				Console.message("You %c{yellow}knock%c{} the %c{green}Guard%c{} down.");
+				newX = me.x;
+				newY = me.y;
+				return;
+			}
+		});
 	
 	
 		var old = Game.map.tiles[this.x + "," + this.y];
