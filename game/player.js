@@ -1,0 +1,85 @@
+//PLAYER STUFF
+var Player = function(xx, yy) {
+
+	this.x = xx;
+	this.y = yy;
+	this.char = "@";
+	this.color = "#000";
+
+	this.points = 0;
+};
+Player.prototype.act = function(){
+	this.points += 1;
+	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
+	Game.engine.lock();
+	window.addEventListener("keydown", this);
+	
+};
+Player.prototype.handleEvent = function(e){
+	//Define keys.
+	var keyMap = {};
+	keyMap[38] = 0; //UP
+	keyMap[33] = 1; //UPRIGHT
+	keyMap[39] = 2; //And so on
+	keyMap[34] = 3;
+	keyMap[40] = 4;
+	keyMap[35] = 5;
+	keyMap[37] = 6;
+	keyMap[36] = 7;
+
+	var code = e.keyCode;
+	if(!(code in keyMap)){ return;} //Dont do anything if invalid key is pressed.
+
+	var dir = ROT.DIRS[8] [keyMap[code]];
+	var newX = dir[0] + this.x;
+	var newY = dir[1] + this.y;
+	var newKey = newX + "," + newY;
+	var newTile = Game.map.tiles[newKey];
+	
+	//Moving
+	if(newTile.type == "floor"){
+		//This is the part where we kill the lord(batman)
+		if(Game.lord){
+			if(Game.lord.x == newX && Game.lord.y == newY){
+				Console.message("%b{red}You %c{yellow}kill%c{} the %c{blue}Lord%c{}.");
+				Console.message("Victory.");
+				Console.message("%c{grey}You commit sudoku");
+				Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
+				window.removeEventListener("keydown", this);
+				Game.engine.lock();
+				return;
+			}
+		}
+	
+	
+		var old = Game.map.tiles[this.x + "," + this.y];
+		Game.display.draw(old.x, old.y, old.char, old.color, old.bg);
+		this.x = newX;
+		this.y = newY;
+		Console.message("%c{grey}You sneak around.");//Displayed only if not the most recent message.
+	} else { return; }
+
+	//Render
+	Game.map.draw();
+	Game.drawfov = {};
+	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
+	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
+	
+	//On to next turn
+	window.removeEventListener("keydown", this);
+	Game.engine.unlock();
+	
+};
+
+Player.prototype.fovCallback = function(x, y, r, visibility){
+
+	var tile, key;
+	//if(!(key in Game.map.tiles)) return;
+	key = x + "," + y;
+	tile = Game.map.tiles[key];
+	//alert(x + "," + y);
+	if(!tile) { return; }
+	Game.display.draw(x, y, tile.char, tile.color, tile.bg);
+	Game.drawfov[x + "," + y] = true;
+	
+};
