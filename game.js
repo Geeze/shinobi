@@ -178,7 +178,7 @@ var tile = {
 	midlit:
 */
 TileMap.prototype.getBg = function(x, y){
-	if(Game.drawfov)/
+	if(Game.drawfov)
 		if(!(x+","+y in Game.drawfov))
 			return this.tiles[x + "," + y].unlit;
 	if(distance({x:x,y:y}, Game.player) < 10)
