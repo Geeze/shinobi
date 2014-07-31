@@ -56,7 +56,7 @@ var Game = { //Game container
 				type: value ? "wall" : "floor",
 				bg: value ? "#333" : "#efe",		//Lit tile color
 				unlit: value ? "#000" : "#454",	//Unlit tile color
-				heat: 0
+				midlit: value ? "#111" : "#898"
 			};
 			Game.map.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
@@ -175,12 +175,16 @@ var tile = {
 	type: //wall ? floor
 	bg:
 	unlit:
-	heat:
+	midlit:
 */
 TileMap.prototype.getBg = function(x, y){
-
-	return this.tiles[x + "," + y].bg;
-	
+	if(Game.drawfov)/
+		if(!(x+","+y in Game.drawfov))
+			return this.tiles[x + "," + y].unlit;
+	if(distance({x:x,y:y}, Game.player) < 10)
+		return this.tiles[x + "," + y].bg;
+	else
+		return this.tiles[x + "," + y].midlit;
 };
 
 //Draws whole map.
@@ -243,80 +247,15 @@ var getDir = function(x,y){
 	if(x < 0 && y < 0) return 7;//UPLEFT
 	
 };
-
-//HEATMAP HANDLING callback should return 1 
-var Heat = {};
-
-var heatInit = function(){
-	oldNodes = new Set(null, heatEquals, heatHash);
-	freshNodes = new Set(null, heatEquals, heatHash);
-	heatTime = 0;
-};
-var heatSet = function(x,y,time){
-	freshNodes.add([x,y]);
-	heatTime = time;
-};
-var heatSpread = function(){
-	if(heatTime < 1) return;
-	var newNodes = new Set(null, heatEquals, heatHash);
-	freshNodes.forEach(function(node){
-		newNodes.addEach(heatNeighbors(node));
-	});
-	oldNodes.addEach(freshNodes);
-	freshNodes = newNodes.difference(oldNodes);
-	//freshNodes = newNodes;
+//Simple helper for stuff.
+distance = function(a, b){
+	var dx, dy;
+	dx = a.x - b.x;
+	dy = a.y - b.y;
+	if(dx < 0) dx = -dx;
+	if(dy < 0) dy = -dy;
 	
-	heatTime -= 1;
-	//alert(newNodes.toArray());
-};
-//Returns possible neighbors for each node
-var heatNeighbors = function(node){
-	var i,j;
-	var neighbors = new Set();
-	for(i = -1; i <= 1; i++){
-		for(j = -1; j <= 1; j++){
-			if(lightPasses(node[0] + i, node[1] + j)){
-				neighbors.add([node[0] + i, node[1] + j]);
-			}
-		}
-	}
-	return neighbors;
-};
-var heatDraw = function(){
-	oldNodes.forEach(function(node){
-		Game.display.draw(node[0], node[1], ".", "#000", "#fb0");
-	});
-	freshNodes.forEach(function(node){
-		Game.display.draw(node[0], node[1], ".", "#000", "#bf0");
-	});//*/
-};
-var heatEquals = function(a, b){
-	if(a[0] == b[0] && a[1] == b[1]){
-		return true;
-	} else {
-		return false;
-	}
-};
-
-var heatRemove = function(x, y){
-	oldNodes.delete([x,y]);
-	freshNodes.delete([x,y]);
-};
-var heatHash = function(object){
-	return object[0] + "," + object[1];//object[0]+300*object[1];
-};
-var heatFind = function(x, y){
-	var dist, node, curd;
-	dist = 99999999;
-	oldNodes.forEach(function(p){
-		curd = Math.abs(x-p[0])+Math.abs(y-p[1]);
-		if(curd < dist){
-			dist = curd;
-			node = p;
-		}
-	});
-	
-	return node;
+	return Math.sqrt(dx*dx + dy*dy);
 };
 
 	Game.init();

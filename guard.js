@@ -8,16 +8,30 @@ var Guard = function(xx, yy) {
 	this.color = "#000";
 	this.bg = "#393";
 	//AI
-	this.state = "sentry"; //sentry, patrol, alert, chase
-	this.facing = Math.floor(ROT.RNG.getUniform()*7.99);
+	this.state = "sentry"; //sentry, patrol, search, chase
+	/*
+		sentry = guard randomly rotates around the spot. Possibility to go on patrol
+		patrol = guard chooses a random point and goes there. Starts to sentry at destination
+		search = guard chooses a point on heatmap and goes there. Repeats until no heat
+		chase = guard moves towards player when seen. When player is lost, defaults to search
+	*/
+	this.facing = Math.floor(ROT.RNG.getUniform()*7.99); //Random facing for the guard
 	this._facinglines = ["|", "/", "-", "\\", "|", "/", "-", "\\"]; //Characters for the viewcone effect 0 = north
 	this.path = [];
-	
 	this.stuntime = 0;
+	
 	//Vision
-	this.fov = {};
-	this._seen = false;
-	this._visible = false;
+	this.fov = {}; //List of tiles the guard sees
+	this._seen = false; //Used for notifying player when they see a new guard
+	this._visible = false; //If guard is seen by player. THIS IS USED TO FIX PEEKING. 
+	/**
+		Peeking = fov algorithm always shows the tile behind corner.
+			XXXXXXX
+			XXXXXXX@
+			G
+		Here the guard would see player and player cant see the guard. 
+		_visible makes the game fairer by allowing player to hide behind corners
+	*/
 	
 };
 
@@ -27,9 +41,9 @@ Guard.prototype.act = function(){
 
 	//SENTRY
 	if(this.state == "sentry"){
-		this.facing = (this.facing + 8 + Math.floor(ROT.RNG.getUniform()*2.99)-1)%8;
+		this.facing = (this.facing + 8 + Math.floor(ROT.RNG.getUniform()*2.99)-1)%8; //Rotate 45 degrees or not
 		
-		if(ROT.RNG.getUniform() < 0.03){// GONNA GO PATROL Yea
+		if(ROT.RNG.getUniform() < 0.03){	// Go for patrol?
 			p = findFree();					//Find destination for patrol
 			this.startPatrol(p.x, p.y);
 			if(this._visible){
@@ -41,8 +55,8 @@ Guard.prototype.act = function(){
 	
 	if(this.state == "patrol" || this.state == "search"){
 		if(this.path.length !== 0){
+		
 			//Get next tile
-			
 			p = this.path.shift();
 			
 			//Handle facing while patrol
@@ -55,22 +69,23 @@ Guard.prototype.act = function(){
 			this.y = p[1];
 			
 			
-		} else {
+		} else { //End of path
 			if(this.state == "patrol"){
 				this.state = "sentry";
-			} else {
+				if(this._visible){
+					Console.message("The %c{green}Guard%c{} has stopped his %c{yellow}patrol%c{}.");
+				}	
+			} else {//If searching search more!
 				this.startSearch(this.x, this.y);
 			}
-			if(this._visible){
-				Console.message("The %c{green}Guard%c{} has stopped his %c{yellow}patrol%c{}.");
-			}
 		}
-	}
+	}//END OF PATROL
+	
 	//TODO: CHASE / PURSUE
 	if(this.state == "chase"){
-		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible){
+		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible){ //PLAYER STILL VISIBLE
 		
-			//TAKE STEPS TOWARDS PLAYER, has to reevaluate path everyturn.
+			//TAKE STEPS TOWARDS PLAYER, has to re-evaluate path every turn!
 			this.path = [];
 			var astar = new ROT.Path.AStar(Game.player.x, Game.player.y, lightPasses);
 			var d = false;
@@ -80,10 +95,10 @@ Guard.prototype.act = function(){
 				g.path.push([x, y]);
 			});
 			
-			if(this.path.length > 2){
+			if(this.path.length > 2){//PLAYER NOT IN REACH
 				//Get next tile
 				p = this.path.shift();
-				if(p[0] == this.x && p[1] == this.y){//Path first node is on the same tile
+				if(p[0] == this.x && p[1] == this.y){//if path first node is on the same tile
 					p = this.path.shift();
 				}
 				
@@ -96,17 +111,18 @@ Guard.prototype.act = function(){
 				this.x = p[0];
 				this.y = p[1];
 			
-			
 			}
-			if(this.path.length < 2){
+			
+			if(this.path.length < 2){//PLAYER IN REACH
 				Game.engine.lock();
 				Console.message("%c{red}GAME OVER%c{} - You got caught! %c{cyan}Press F5/Refresh to restart");
 			}
-		} else {
+		} else {//LOST THE PLAYER
 			Console.message("The %c{green}Guard%c{} has %c{yellow}lost%c{} you.");
-			this.state = "search"; //Here is the beauty, the chase route is used for patrol automatically meaning they'll go where player was last seen, to try find him
+			this.state = "search"; //Here is the beauty, the chase route is used for patrol automatically meaning they'll go where player was last seen, to try find him.
 		}
-	}
+	}//END OF CHASE
+	
 	//HANDLE STUN
 	if(this.state == "stunned"){
 		this.stuntime -= 1;
@@ -125,6 +141,7 @@ Guard.prototype.act = function(){
 			this.char, 
 			this.color, 
 			this.bg);
+			
 		//Draw the viewcone	
 		if(this.state != "stunned"){
 			var dir, i;
@@ -146,18 +163,21 @@ Guard.prototype.act = function(){
 		this._visible = true;
 	} else {
 		this._visible = false;
-	}
+	}//END OF DRAW
 
-	//TODO: GUARD SIGHT
+	//GUARD SIGHT
 	if(this.state != "stunned"){
+	
 		this.fov = {};
-		var fov = this.fov; //allows fov to be used in delegate
+		var fov = this.fov; //allows fov to be used in delegate(?)
 		
+		//CALCULATE FOV
 		Game.fov.compute90(this.x, this.y, 10, this.facing, function(xx, yy, r, visibility){
+		
 			fov[xx + "," + yy] = true;
 			if(!(Game.player.x == xx & Game.player.y == yy))
 				heatRemove(xx, yy);
-			//Game.display.draw(xx, yy, ".");
+				
 		});
 		
 		//WHEN GUARD SEES PLAYER
@@ -165,26 +185,38 @@ Guard.prototype.act = function(){
 			heatInit();
 			heatSet(Game.player.x, Game.player.y, 16);
 			if(this.state != "chase") 
-				Console.message("The %c{green}Guard%c{} has %c{yellow}seen %c{}you!");
+				Console.message("A %c{green}Guard%c{} has %c{yellow}seen %c{}you!");
 			Game.display.draw(this.x, this.y - 1, "!", "#f00", Game.map.getBg(this.x, this.y - 1));
 			this.state = "chase";
 		}
-	}
+	}//END OF SIGHT
 };
+/*
+	startPatrol(x,y) = selfexplanatory
+	I reused this for search, just by manually setting state to "search" afterwards
+*/
 Guard.prototype.startPatrol = function(x, y){
+
 	var astar = new ROT.Path.AStar(x, y, lightPasses);
 	var d = false;//checks if path was created. if not go b to sentry
 	var g = this;
+	
 	astar.compute(this.x, this.y, function(x, y){
 		d = true;
 		g.path.push([x, y]);
 	});
+	
 	if (d){ //if path was found
 		this.state = "patrol";
 	} else { //if not
 		this.state = "sentry";
 	}
 };
+/*
+	startSearch(x,y) = finds closest heat and goes there, repeat.
+	
+	TODO: Make it so that when the target heat is cleared (by fov or other guards) startSearch() again
+*/
 Guard.prototype.startSearch = function(x, y){
 	var p = heatFind(x,y);
 	if(!p){

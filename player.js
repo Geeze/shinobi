@@ -112,7 +112,10 @@ Player.prototype.fovCallback = function(x, y, r, visibility){
 	tile = Game.map.tiles[key];
 	//alert(x + "," + y);
 	if(!tile) { return; }
-	Game.display.draw(x, y, tile.char, tile.color, tile.bg);
+	if(r < 10)
+		Game.display.draw(x, y, tile.char, tile.color, tile.bg);
+	else
+		Game.display.draw(x, y, tile.char, tile.color, tile.midlit);
 	Game.drawfov[x + "," + y] = true;
 	
 };
