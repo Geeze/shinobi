@@ -36,10 +36,10 @@ var Game = { //Game container
 		//Deal with the devil
 		//ROT.RNG.setSeed(666);
 		
-		//DAILY LEVEL
+		/*DAILY LEVEL
 		var d = new Date();
 		ROT.RNG.setSeed(d.getDate()+31*d.getMonth()+365*d.getYear());
-		
+		//*/
 		
 		//Use if you need to test consistency? Or whe you need to know guard positions
 		this.map = new TileMap(this.gameWidth, 25);
@@ -71,7 +71,7 @@ var Game = { //Game container
 		var g = null;
 		var i;
 		this.player = new Player(p.x, p.y);
-		for (i = 0; i < 9; i++) {//TODO: CHANGE BACK
+		for (i = 0; i < 7; i++) {//TODO: CHANGE BACK
 			p = findFree();					//Find free position
 			g = new Guard(p.x, p.y);		//Put guard there
 			this.objects.add(g);
@@ -107,16 +107,19 @@ var Game = { //Game container
 			"yellow");
 		Game.display.draw(this.lord.x, this.lord.y, "X");
 		//HEAT Map
-		initHeat();
+		heatInit();
 		/*
-		setHeat(this.player.x, this.player.y, 54);
+		heatSet(this.player.x, this.player.y, 54);
 		var ii = 32;
 		while(ii > 0){
-			spreadHeat();
+			heatSpread();
 			ii--;
 		}
-		drawHeat();
+		heatDraw();
 		//*/
+		
+		//INIT MOUSE
+		
 	}
 
 };
@@ -244,16 +247,16 @@ var getDir = function(x,y){
 //HEATMAP HANDLING callback should return 1 
 var Heat = {};
 
-var initHeat = function(){
+var heatInit = function(){
 	oldNodes = new Set(null, heatEquals, heatHash);
 	freshNodes = new Set(null, heatEquals, heatHash);
 	heatTime = 0;
 };
-var setHeat = function(x,y,time){
+var heatSet = function(x,y,time){
 	freshNodes.add([x,y]);
 	heatTime = time;
 };
-var spreadHeat = function(){
+var heatSpread = function(){
 	if(heatTime < 1) return;
 	var newNodes = new Set(null, heatEquals, heatHash);
 	freshNodes.forEach(function(node){
@@ -279,7 +282,7 @@ var heatNeighbors = function(node){
 	}
 	return neighbors;
 };
-var drawHeat = function(){
+var heatDraw = function(){
 	oldNodes.forEach(function(node){
 		Game.display.draw(node[0], node[1], ".", "#000", "#fb0");
 	});
@@ -298,9 +301,22 @@ var heatEquals = function(a, b){
 var heatRemove = function(x, y){
 	oldNodes.delete([x,y]);
 	freshNodes.delete([x,y]);
-}
+};
 var heatHash = function(object){
 	return object[0] + "," + object[1];//object[0]+300*object[1];
+};
+var heatFind = function(x, y){
+	var dist, node, curd;
+	dist = 99999999;
+	oldNodes.forEach(function(p){
+		curd = Math.abs(x-p[0])+Math.abs(y-p[1]);
+		if(curd < dist){
+			dist = curd;
+			node = p;
+		}
+	});
+	
+	return node;
 };
 
 	Game.init();

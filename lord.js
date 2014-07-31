@@ -29,34 +29,6 @@ Lord.prototype.act = function(){
 
 	}
 	
-	if(this.x + "," + this.y in Game.drawfov) {
-		Game.display.draw(
-			this.x,
-			this.y,
-			this.char,
-			this.color,
-			this.bg);
-			
-		//Draw the viewcone
-		var dir, i;
-		for(i = -2; i < 3; i++){
-			dir = ROT.DIRS[8][(this.facing + i + 8) % 8];
-			Game.display.draw(
-				this.x + dir[0],
-				this.y + dir[1],
-				this._facinglines[(this.facing + i + 8)%8],
-				this.bg,
-				Game.map.getBg(this.x + dir[0], this.y + dir[1]));
-		}
-		if(!this._seen){
-			Console.message("You see a %c{blue}lord%c{}.");
-			this._seen = true;
-		}
-		this._visible = true;
-	} else {
-		this._visible = false;
-	}
-
 	this.fov = {};
 	var fov = this.fov;
 	Game.fov.compute180(this.x, this.y, 10, this.facing,
@@ -101,6 +73,36 @@ Lord.prototype.act = function(){
 		this.x = p[0];
 		this.y = p[1];
 	}
+	
+	
+	if(this.x + "," + this.y in Game.drawfov) {
+		Game.display.draw(
+			this.x,
+			this.y,
+			this.char,
+			this.color,
+			this.bg);
+			
+		//Draw the viewcone
+		var dir, i;
+		for(i = -2; i < 3; i++){
+			dir = ROT.DIRS[8][(this.facing + i + 8) % 8];
+			Game.display.draw(
+				this.x + dir[0],
+				this.y + dir[1],
+				this._facinglines[(this.facing + i + 8)%8],
+				this.bg,
+				Game.map.getBg(this.x + dir[0], this.y + dir[1]));
+		}
+		if(!this._seen){
+			Console.message("You see a %c{blue}lord%c{}.");
+			this._seen = true;
+		}
+		this._visible = true;
+	} else {
+		this._visible = false;
+	}
+
 	
 };
 // CUSTOM PATHFINDER HEURISTIC(?) that avoids the player. simple.

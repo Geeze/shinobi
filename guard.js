@@ -39,7 +39,7 @@ Guard.prototype.act = function(){
 	}
 	//PATROL
 	
-	if(this.state == "patrol"){
+	if(this.state == "patrol" || this.state == "search"){
 		if(this.path.length !== 0){
 			//Get next tile
 			
@@ -56,7 +56,11 @@ Guard.prototype.act = function(){
 			
 			
 		} else {
-			this.state = "sentry";
+			if(this.state == "patrol"){
+				this.state = "sentry";
+			} else {
+				this.startSearch(this.x, this.y);
+			}
 			if(this._visible){
 				Console.message("The %c{green}Guard%c{} has stopped his %c{yellow}patrol%c{}.");
 			}
@@ -100,7 +104,7 @@ Guard.prototype.act = function(){
 			}
 		} else {
 			Console.message("The %c{green}Guard%c{} has %c{yellow}lost%c{} you.");
-			this.state = "patrol"; //Here is the beauty, the chase route is used for patrol automatically meaning they'll go where player was last seen, to try find him
+			this.state = "search"; //Here is the beauty, the chase route is used for patrol automatically meaning they'll go where player was last seen, to try find him
 		}
 	}
 	//HANDLE STUN
@@ -158,8 +162,8 @@ Guard.prototype.act = function(){
 		
 		//WHEN GUARD SEES PLAYER
 		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible){//Condition for if player is seen. reusable
-			initHeat();
-			setHeat(Game.player.x, Game.player.y, 16);
+			heatInit();
+			heatSet(Game.player.x, Game.player.y, 16);
 			if(this.state != "chase") 
 				Console.message("The %c{green}Guard%c{} has %c{yellow}seen %c{}you!");
 			Game.display.draw(this.x, this.y - 1, "!", "#f00", Game.map.getBg(this.x, this.y - 1));
@@ -180,5 +184,14 @@ Guard.prototype.startPatrol = function(x, y){
 	} else { //if not
 		this.state = "sentry";
 	}
+};
+Guard.prototype.startSearch = function(x, y){
+	var p = heatFind(x,y);
+	if(!p){
+		this.state = "sentry";
+		return;
+	}
+	this.startPatrol(p[0], p[1]);
+	this.state = "search";
 };
 
