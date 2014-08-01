@@ -83,7 +83,7 @@ var Heat = {
 	//Find the closest heat
 	find: function(x, y){
 		var dist, node, curDist;
-		dist = infinity;
+		dist = 999999999;
 		this.oldNodes.forEach(function(p){
 			curd = Math.abs(x-p[0])+Math.abs(y-p[1]);
 			if(curDist < dist){
