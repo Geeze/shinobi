@@ -10,7 +10,7 @@ var Player = function(xx, yy) {
 };
 Player.prototype.act = function(){
 	this.points += 1;
-	heatSpread();
+	Heat.spread();
 	
 	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
 	Game.engine.lock();
@@ -20,25 +20,25 @@ Player.prototype.act = function(){
 };
 Player.prototype.handleEvent = function(e){
 	//Define keys.
-	var keyMap = {};
+	var keyLevel = {};
 	//ARROWS
-	keyMap[38] = 0; //UP
-	keyMap[33] = 1; //UPRIGHT
-	keyMap[39] = 2; //And so on
-	keyMap[34] = 3;
-	keyMap[40] = 4;
-	keyMap[35] = 5;
-	keyMap[37] = 6;
-	keyMap[36] = 7;
+	keyLevel[38] = 0; //UP
+	keyLevel[33] = 1; //UPRIGHT
+	keyLevel[39] = 2; //And so on
+	keyLevel[34] = 3;
+	keyLevel[40] = 4;
+	keyLevel[35] = 5;
+	keyLevel[37] = 6;
+	keyLevel[36] = 7;
 	//NUMPAD
-	keyMap[104] = 0; //UP
-	keyMap[105] = 1; //UPRIGHT
-	keyMap[102] = 2; //And so on
-	keyMap[99] = 3;
-	keyMap[98] = 4;
-	keyMap[97] = 5;
-	keyMap[100] = 6;
-	keyMap[103] = 7;
+	keyLevel[104] = 0; //UP
+	keyLevel[105] = 1; //UPRIGHT
+	keyLevel[102] = 2; //And so on
+	keyLevel[99] = 3;
+	keyLevel[98] = 4;
+	keyLevel[97] = 5;
+	keyLevel[100] = 6;
+	keyLevel[103] = 7;
 	
 
 	
@@ -46,16 +46,16 @@ Player.prototype.handleEvent = function(e){
 	var code = e.keyCode;
 	
 	if(code == 72){
-		heatDraw();
+		Heat.draw();
 	}
 	
-	if(!(code in keyMap)){ return;} //Dont do anything if invalid key is pressed.
+	if(!(code in keyLevel)){ return;} //Dont do anything if invalid key is pressed.
 
-	var dir = ROT.DIRS[8] [keyMap[code]];
+	var dir = ROT.DIRS[8] [keyLevel[code]];
 	var newX = dir[0] + this.x;
 	var newY = dir[1] + this.y;
 	var newKey = newX + "," + newY;
-	var newTile = Game.map.tiles[newKey];
+	var newTile = Game.level.tiles[newKey];
 	
 	//Moving
 	if(newTile.type == "floor"){
@@ -67,6 +67,8 @@ Player.prototype.handleEvent = function(e){
 				Console.message("%c{grey}You commit sudoku");
 				Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
 				window.removeEventListener("keydown", this);
+				window.removeEventListener("mousedown", this.mouse);
+				
 				Game.engine.lock();
 				return;
 			}
@@ -85,7 +87,7 @@ Player.prototype.handleEvent = function(e){
 		});
 	
 	
-		var old = Game.map.tiles[this.x + "," + this.y];
+		var old = Game.level.tiles[this.x + "," + this.y];
 		Game.display.draw(old.x, old.y, old.char, old.color, old.bg);
 		this.x = newX;
 		this.y = newY;
@@ -93,7 +95,7 @@ Player.prototype.handleEvent = function(e){
 	} else { return; }
 
 	//Render
-	Game.map.draw();
+	Game.level.draw();
 	Game.drawfov = {};
 	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
 	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
@@ -107,12 +109,15 @@ Player.prototype.handleEvent = function(e){
 Player.prototype.fovCallback = function(x, y, r, visibility){
 
 	var tile, key;
-	//if(!(key in Game.map.tiles)) return;
+	//if(!(key in Game.level.tiles)) return;
 	key = x + "," + y;
-	tile = Game.map.tiles[key];
+	tile = Game.level.tiles[key];
 	//alert(x + "," + y);
 	if(!tile) { return; }
-	Game.display.draw(x, y, tile.char, tile.color, tile.bg);
+	if(r < 10)
+		Game.display.draw(x, y, tile.char, tile.color, tile.bg);
+	else
+		Game.display.draw(x, y, tile.char, tile.color, tile.midlit);
 	Game.drawfov[x + "," + y] = true;
 	
 };

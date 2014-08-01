@@ -69,7 +69,7 @@ Lord.prototype.act = function(){
 			return;
 		}
 		var p = this.path.shift();
-		this.facing = getDir(p[0]-this.x, p[1]-this.y);
+		this.facing = Util.getDir(p[0]-this.x, p[1]-this.y);
 		this.x = p[0];
 		this.y = p[1];
 	}
@@ -92,7 +92,7 @@ Lord.prototype.act = function(){
 				this.y + dir[1],
 				this._facinglines[(this.facing + i + 8)%8],
 				this.bg,
-				Game.map.getBg(this.x + dir[0], this.y + dir[1]));
+				Game.level.getBg(this.x + dir[0], this.y + dir[1]));
 		}
 		if(!this._seen){
 			Console.message("You see a %c{blue}lord%c{}.");
@@ -109,8 +109,8 @@ Lord.prototype.act = function(){
 var escapeRoute = function(x, y){
 	if(Math.abs(Game.player.x-x) < 2 && Math.abs(Game.player.y-y) < 2) {return false;}
 	var key = x + "," + y;
-	if(!(key in Game.map.tiles)) return false;
-	var tile = Game.map.tiles[key];
+	if(!(key in Game.level.tiles)) return false;
+	var tile = Game.level.tiles[key];
 	if (tile.type == "floor") { return true; }
 	else { return false; }
 
