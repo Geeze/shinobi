@@ -60,21 +60,30 @@ Lord.prototype.act = function(){
 			lord.path.push([x,y]);
 			//DEBUG: Game.display.draw(x,y,"x");
 		});
+		if(this.path.length === 0){
+			astar = new ROT.Path.AStar(g.x, g.y, escapeRoute);
+			astar.compute(this.x, this.y, function(x, y){
+				lord.path.push([x,y]);
+			
+			});
+		}
 		this.path.shift();
 	}
 	//Handle escape
 	if(this.state == "escape"){
+		
+		var p = this.path.shift();
 		if(this.path.length === 0) {
 			this.state = "idle";
-			return;
-		}
-		var p = this.path.shift();
+			this.facing = 1;
+		} else {
 		this.facing = Util.getDir(p[0]-this.x, p[1]-this.y);
-		this.x = p[0];
-		this.y = p[1];
+			this.x = p[0];
+			this.y = p[1];
+		}
 	}
 	
-	
+	console.log(this.x + "," + this.y);
 	if(this.x + "," + this.y in Game.drawfov) {
 		Game.display.draw(
 			this.x,
@@ -82,9 +91,11 @@ Lord.prototype.act = function(){
 			this.char,
 			this.color,
 			this.bg);
-			
+		console.log("drawn at " + this.x + "," + this.y + " facing " + this.facing);
+		console.log("player at " + Game.player.x + "," + Game.player.y);
 		//Draw the viewcone
 		var dir, i;
+		if(this.state != "escape")
 		for(i = -2; i < 3; i++){
 			dir = ROT.DIRS[8][(this.facing + i + 8) % 8];
 			Game.display.draw(
@@ -94,6 +105,7 @@ Lord.prototype.act = function(){
 				this.bg,
 				Game.level.getBg(this.x + dir[0], this.y + dir[1]));
 		}
+		
 		if(!this._seen){
 			Console.message("You see a %c{blue}lord%c{}.");
 			this._seen = true;
@@ -101,6 +113,7 @@ Lord.prototype.act = function(){
 		this._visible = true;
 	} else {
 		this._visible = false;
+		console.log("unseen");
 	}
 
 	
