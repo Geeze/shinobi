@@ -1,7 +1,7 @@
 
 ROT.DEFAULT_WIDTH = 70;
 ROT.DEFAULT_HEIGHT = 25;
-//ROT.Display.Rect.cache = true;
+
 
 var Game = { //Game container
 
