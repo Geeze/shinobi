@@ -212,6 +212,7 @@ TileLevel.prototype.draw = function () {
 
 	Game.init();
 	Console._init();
+
 	Game.engine.start();
 	
 	Console.message("Kill the lord or face death!");
