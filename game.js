@@ -77,7 +77,7 @@ var Game = { //Game container
 		var g = null;
 		var i;
 		this.player = new Player(p.x, p.y);
-		for (i = 0; i < 1; i++) {//TODO: CHANGE BACK
+		for (i = 0; i < 8; i++) {//TODO: CHANGE BACK
 			p = Util.findFree();					//Find free position
 			g = new Guard(p.x, p.y);		//Put guard there
 			this.objects.add(g);
@@ -212,6 +212,7 @@ TileLevel.prototype.draw = function () {
 
 	Game.init();
 	Console._init();
+
 	Game.engine.start();
 	
 	Console.message("Kill the lord or face death!");

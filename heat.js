@@ -1,8 +1,9 @@
 //HEATMAP HANDLING
 var Heat = {
 	
-	
-	
+	time: 0,
+	oldNodes: null,
+	freshNodes: null,
 	
 	//Initialize things. Called whenever heatlevel has to be cleared
 	init: function(){
@@ -15,15 +16,32 @@ var Heat = {
 		this.freshNodes.add([x,y]);
 		heatTime = time;
 	},
+	
+	neighbors: function(node){
+
+		var i,j;
+		var n = new Set();
+		
+		//3x3 grid around current node, TODO: Util.lightPasses might have to be refactored into something else later
+		for(i = -1; i <= 1; i++){
+			for(j = -1; j <= 1; j++){
+				if(Util.lightPasses(node[0] + i, node[1] + j)){
+					n.add([node[0] + i, node[1] + j]);
+				}
+			}
+		}
+		
+		return n;
+	},
 	//Spreads the heat one iteration
 	spread: function(){
 		//Dont spread if time = 0
 		if(heatTime < 1) return;
-		
+		me = this;
 		//Get next iteration of nodes
 		var newNodes = new Set(null, this._equals, this._hash);
 		this.freshNodes.forEach(function(node){
-			newNodes.addEach(this.neighbors(node));
+			newNodes.addEach(me.neighbors(node));
 		});
 		
 		this.oldNodes.addEach(this.freshNodes);
@@ -32,22 +50,7 @@ var Heat = {
 		heatTime -= 1;
 	},
 	//Returns possible neighbors for each node
-	neighbors: function(node){
-
-		var i,j;
-		var neighbors = new Set();
-		
-		//3x3 grid around current node, TODO: Util.lightPasses might have to be refactored into something else later
-		for(i = -1; i <= 1; i++){
-			for(j = -1; j <= 1; j++){
-				if(Util.lightPasses(node[0] + i, node[1] + j)){
-					neighbors.add([node[0] + i, node[1] + j]);
-				}
-			}
-		}
-		
-		return neighbors;
-	},
+	
 
 	//Debugging. Draws the heatlevel over game. Atm called by pressing 'H'
 	draw: function(){
