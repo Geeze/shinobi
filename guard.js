@@ -44,7 +44,7 @@ Guard.prototype.act = function(){
 		this.facing = (this.facing + 8 + Math.floor(ROT.RNG.getUniform()*2.99)-1)%8; //Rotate 45 degrees or not
 		
 		if(ROT.RNG.getUniform() < 0.03){	// Go for patrol?
-			p = findFree();					//Find destination for patrol
+			p = Util.findFree();					//Find destination for patrol
 			this.startPatrol(p.x, p.y);
 			if(this._visible){
 				Console.message("The %c{green}Guard%c{} has started %c{yellow}patroling%c{}.");
@@ -62,7 +62,7 @@ Guard.prototype.act = function(){
 			//Handle facing while patrol
 			dx = p[0] - this.x;
 			dy = p[1] - this.y;
-			this.facing = getDir(dx, dy);
+			this.facing = Util.getDir(dx, dy);
 			
 			//Move guard
 			this.x = p[0];
@@ -87,7 +87,7 @@ Guard.prototype.act = function(){
 		
 			//TAKE STEPS TOWARDS PLAYER, has to re-evaluate path every turn!
 			this.path = [];
-			var astar = new ROT.Path.AStar(Game.player.x, Game.player.y, lightPasses);
+			var astar = new ROT.Path.AStar(Game.player.x, Game.player.y, Util.lightPasses);
 			var d = false;
 			var g = this;
 			astar.compute(this.x, this.y, function(x, y){
@@ -105,7 +105,7 @@ Guard.prototype.act = function(){
 				//Handle facing while chasing
 				dx = p[0] - this.x;
 				dy = p[1] - this.y;
-				this.facing = getDir(dx, dy);
+				this.facing = Util.getDir(dx, dy);
 				
 				//Move guard
 				this.x = p[0];
@@ -176,14 +176,14 @@ Guard.prototype.act = function(){
 		
 			fov[xx + "," + yy] = true;
 			if(!(Game.player.x == xx & Game.player.y == yy))
-				heatRemove(xx, yy);
+				Heat.remove(xx, yy);
 				
 		});
 		
 		//WHEN GUARD SEES PLAYER
 		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible){//Condition for if player is seen. reusable
-			heatInit();
-			heatSet(Game.player.x, Game.player.y, 16);
+			Heat.init();
+			Heat.set(Game.player.x, Game.player.y, 16);
 			if(this.state != "chase") 
 				Console.message("A %c{green}Guard%c{} has %c{yellow}seen %c{}you!");
 			Game.display.draw(this.x, this.y - 1, "!", "#f00", Game.level.getBg(this.x, this.y - 1));
@@ -197,7 +197,7 @@ Guard.prototype.act = function(){
 */
 Guard.prototype.startPatrol = function(x, y){
 
-	var astar = new ROT.Path.AStar(x, y, lightPasses);
+	var astar = new ROT.Path.AStar(x, y, Util.lightPasses);
 	var d = false;//checks if path was created. if not go b to sentry
 	var g = this;
 	
@@ -218,7 +218,7 @@ Guard.prototype.startPatrol = function(x, y){
 	TODO: Make it so that when the target heat is cleared (by fov or other guards) startSearch() again
 */
 Guard.prototype.startSearch = function(x, y){
-	var p = heatFind(x,y);
+	var p = Heat.find(x,y);
 	if(!p){
 		this.state = "sentry";
 		return;

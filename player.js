@@ -10,7 +10,7 @@ var Player = function(xx, yy) {
 };
 Player.prototype.act = function(){
 	this.points += 1;
-	heatSpread();
+	Heat.spread();
 	
 	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
 	Game.engine.lock();
@@ -46,7 +46,7 @@ Player.prototype.handleEvent = function(e){
 	var code = e.keyCode;
 	
 	if(code == 72){
-		heatDraw();
+		Heat.draw();
 	}
 	
 	if(!(code in keyLevel)){ return;} //Dont do anything if invalid key is pressed.
@@ -68,8 +68,8 @@ Player.prototype.handleEvent = function(e){
 				Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
 				window.removeEventListener("keydown", this);
 				window.removeEventListener("mousedown", this.mouse);
-				changeLevel(1);
-				Game.engine.unlock();
+				
+				Game.engine.lock();
 				return;
 			}
 		}

@@ -69,7 +69,7 @@ Lord.prototype.act = function(){
 			return;
 		}
 		var p = this.path.shift();
-		this.facing = getDir(p[0]-this.x, p[1]-this.y);
+		this.facing = Util.getDir(p[0]-this.x, p[1]-this.y);
 		this.x = p[0];
 		this.y = p[1];
 	}

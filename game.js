@@ -8,7 +8,6 @@ var Game = { //Game container
 	//ENGINE
 	display: null,
 	level: null,
-	levels: [],
 	scheduler: null,
 	engine: null,
 	
@@ -44,20 +43,13 @@ var Game = { //Game container
 		//*/
 		
 		//Use if you need to test consistency? Or whe you need to know guard positions
-		var gen;
+		
 		this.level = new TileLevel(this.gameWidth, 25);
-		gen = new ROT.Map.Digger(this.gameWidth, 25, {
+		var gen = new ROT.Map.Digger(this.gameWidth, 25, {
 			dugPercentage: 0.5, 
 			roomHeight: [3, 7], 
 			roomWidth: [3, 7]});
-			gen.create(digCallback);
-		this.levels[1] = this.level;
-		this.level = new TileLevel(this.gameWidth, 25);
-		gen = new ROT.Map.Digger(this.gameWidth, 25, {
-			dugPercentage: 0.5, 
-			roomHeight: [3, 7], 
-			roomWidth: [3, 7]});
-		this.levels[0] = this.level;
+		
 			
 			
 		var digCallback = function (xx, yy, value) {
@@ -73,6 +65,7 @@ var Game = { //Game container
 			};
 			Game.level.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
+		
 		gen.create(digCallback);
 		
 		//CREATE SCHEDULER
@@ -80,22 +73,22 @@ var Game = { //Game container
 		this.engine = new ROT.Engine(this.scheduler);
 
 		//SPAWN CREATURES
-		var p = findFree();
+		var p = Util.findFree();
 		var g = null;
 		var i;
 		this.player = new Player(p.x, p.y);
 		for (i = 0; i < 1; i++) {//TODO: CHANGE BACK
-			p = findFree();					//Find free position
+			p = Util.findFree();					//Find free position
 			g = new Guard(p.x, p.y);		//Put guard there
 			this.objects.add(g);
 			this.guards.add(g);
-			p = findFree();					//Find destination for patrol
+			p = Util.findFree();					//Find destination for patrol
 			g.startPatrol(p.x, p.y);		//Start patrol
 			this.scheduler.add(g, true);			//Add guard to gameloop
 			
 		}
 		this.scheduler.add(this.player, true);
-		p = findFree();
+		p = Util.findFree();
 		this.lord = new Lord(p.x, p.y);
 		this.objects.add(this.lord);
 		this.scheduler.add(this.lord, true);
@@ -105,7 +98,7 @@ var Game = { //Game container
 		this.objects.add(this.player);
 		
 		//CREATE FOV and draw first turn
-		this.fov = new ROT.FOV.RecursiveShadowcasting(lightPasses);
+		this.fov = new ROT.FOV.RecursiveShadowcasting(Util.lightPasses);
 		Game.level.draw();
 		Game.fov.compute(
 			Game.player.x,
@@ -120,15 +113,15 @@ var Game = { //Game container
 			"yellow");
 		Game.display.draw(this.lord.x, this.lord.y, "X");
 		//HEAT Level
-		heatInit();
+		Heat.init();
 		/*
-		heatSet(this.player.x, this.player.y, 54);
+		Heat.set(this.player.x, this.player.y, 54);
 		var ii = 32;
 		while(ii > 0){
-			heatSpread();
+			Heat.spread();
 			ii--;
 		}
-		heatDraw();
+		Heat.draw();
 		//*/
 		
 		//INIT MOUSE
@@ -173,36 +166,12 @@ var Console = {
 
 };
 
-var changeLevel = function(id){
-	// Remove objects from scheduler
-	Game.objects.forEach(function(o){
-		Game.scheduler.remove(o);
-	});
-	
-	//Old objects into level
-	Game.level.objects = Game.objects;
-	Game.level.guards = Game.guards;
-	
-	//Swap the level
-	Game.level = Game.levels[id];
-	//New objects from level
-	Game.guards = Game.level.guards;
-	Game.objects = Game.level.guards;
-	var p = findFree();
-		var g = null;
-		var i;
-		Game.player = new Player(p.x, p.y);
-	Game.objects.add(this.player);
-	this.scheduler.add(this.player, true);
-};
+
 
 var TileLevel = function (w, h) { //Class for base level functionality
 	this.tiles = {};
 	this.w = w;
 	this.h = h;
-	
-	this.objects = new Set();
-	this.guards = new Set();
 };
 /* TILE SYNTAX
 var tile = {
@@ -219,7 +188,7 @@ TileLevel.prototype.getBg = function(x, y){
 	if(Game.drawfov)
 		if(!(x+","+y in Game.drawfov))
 			return this.tiles[x + "," + y].unlit;
-	if(distance({x:x,y:y}, Game.player) < 10)
+	if(Util.distance({x:x,y:y}, Game.player) < 10)
 		return this.tiles[x + "," + y].bg;
 	else
 		return this.tiles[x + "," + y].midlit;
@@ -243,8 +212,6 @@ TileLevel.prototype.draw = function () {
 
 	Game.init();
 	Console._init();
-	Game.levels[1].draw();
-	alert("");
 	Game.engine.start();
 	
 	Console.message("Kill the lord or face death!");
