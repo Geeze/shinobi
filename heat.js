@@ -1,13 +1,13 @@
 //HEATMAP HANDLING
 var Heat = {};
 
-//Initialize things. Called whenever heatmap has to be cleared
+//Initialize things. Called whenever heatlevel has to be cleared
 var heatInit = function(){
 	oldNodes = new Set(null, heatEquals, heatHash);
 	freshNodes = new Set(null, heatEquals, heatHash);
 	heatTime = 0;
 };
-//Add node in specified coordinates. Heatmap spreads from there max. time nodes
+//Add node in specified coordinates. Heatlevel spreads from there max. time nodes
 var heatSet = function(x,y,time){
 	freshNodes.add([x,y]);
 	heatTime = time;
@@ -46,7 +46,7 @@ var heatNeighbors = function(node){
 	return neighbors;
 };
 
-//Debugging. Draws the heatmap over game. Atm called by pressing 'H'
+//Debugging. Draws the heatlevel over game. Atm called by pressing 'H'
 var heatDraw = function(){
 	oldNodes.forEach(function(node){
 		Game.display.draw(node[0], node[1], ".", "#000", "#fb0");

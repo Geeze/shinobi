@@ -1,13 +1,15 @@
 
 ROT.DEFAULT_WIDTH = 70;
 ROT.DEFAULT_HEIGHT = 25;
-ROT.Display.Rect.cache = true;
+//ROT.Display.Rect.cache = true;
 
 var Game = { //Game container
 
 	//ENGINE
 	display: null,
-	map: null,
+	level: null,
+	levels: [],
+	scheduler: null,
 	engine: null,
 	
 	//CONSTANST
@@ -18,14 +20,14 @@ var Game = { //Game container
 	drawfov: {},
 
 	//Lists of objects
-	objects: new Set(),
+	objects: new Set(),	//Things that go to scheduler
 	guards: new Set(),
 	player: null,
 	lord: null,
 
 	init: function () {
 	
-		//Main map display
+		//Main level display
 		this.display = new ROT.Display({
 			width: this.gameWidth,
 			height: this.gameHeight
@@ -42,11 +44,22 @@ var Game = { //Game container
 		//*/
 		
 		//Use if you need to test consistency? Or whe you need to know guard positions
-		this.map = new TileMap(this.gameWidth, 25);
-		var gen = new ROT.Map.Digger(this.gameWidth, 25, {
+		var gen;
+		this.level = new TileLevel(this.gameWidth, 25);
+		gen = new ROT.Map.Digger(this.gameWidth, 25, {
 			dugPercentage: 0.5, 
 			roomHeight: [3, 7], 
 			roomWidth: [3, 7]});
+			gen.create(digCallback);
+		this.levels[1] = this.level;
+		this.level = new TileLevel(this.gameWidth, 25);
+		gen = new ROT.Map.Digger(this.gameWidth, 25, {
+			dugPercentage: 0.5, 
+			roomHeight: [3, 7], 
+			roomWidth: [3, 7]});
+		this.levels[0] = this.level;
+			
+			
 		var digCallback = function (xx, yy, value) {
 			var tile = {
 				x: xx,
@@ -58,34 +71,34 @@ var Game = { //Game container
 				unlit: value ? "#000" : "#454",	//Unlit tile color
 				midlit: value ? "#111" : "#898"
 			};
-			Game.map.tiles[xx + "," + yy] = tile; //assign tile to array
+			Game.level.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
 		gen.create(digCallback);
 		
 		//CREATE SCHEDULER
-		var scheduler = new ROT.Scheduler.Simple();
-		this.engine = new ROT.Engine(scheduler);
+		this.scheduler = new ROT.Scheduler.Simple();
+		this.engine = new ROT.Engine(this.scheduler);
 
 		//SPAWN CREATURES
 		var p = findFree();
 		var g = null;
 		var i;
 		this.player = new Player(p.x, p.y);
-		for (i = 0; i < 7; i++) {//TODO: CHANGE BACK
+		for (i = 0; i < 1; i++) {//TODO: CHANGE BACK
 			p = findFree();					//Find free position
 			g = new Guard(p.x, p.y);		//Put guard there
 			this.objects.add(g);
 			this.guards.add(g);
 			p = findFree();					//Find destination for patrol
 			g.startPatrol(p.x, p.y);		//Start patrol
-			scheduler.add(g, true);			//Add guard to gameloop
+			this.scheduler.add(g, true);			//Add guard to gameloop
 			
 		}
-		scheduler.add(this.player, true);
+		this.scheduler.add(this.player, true);
 		p = findFree();
 		this.lord = new Lord(p.x, p.y);
 		this.objects.add(this.lord);
-		scheduler.add(this.lord, true);
+		this.scheduler.add(this.lord, true);
 		
 
 		//Player is added last so guards take first turn. In theory makes game sometimes unwinnable
@@ -93,7 +106,7 @@ var Game = { //Game container
 		
 		//CREATE FOV and draw first turn
 		this.fov = new ROT.FOV.RecursiveShadowcasting(lightPasses);
-		Game.map.draw();
+		Game.level.draw();
 		Game.fov.compute(
 			Game.player.x,
 			Game.player.y,
@@ -106,7 +119,7 @@ var Game = { //Game container
 			Game.player.color, 
 			"yellow");
 		Game.display.draw(this.lord.x, this.lord.y, "X");
-		//HEAT Map
+		//HEAT Level
 		heatInit();
 		/*
 		heatSet(this.player.x, this.player.y, 54);
@@ -134,10 +147,11 @@ var Console = {
 	//Setup console display
 	_init: function(){
 		this.display = new ROT.Display({
-			width:this.width, 
+			width:this.width/1.2, 
 			height: this.height, 
 			fg: "#fff", 
-			bg: "#005"});
+			bg: "#005",
+			spacing: 1.2});
 		document.body.appendChild(this.display.getContainer());
 	},
 	
@@ -159,12 +173,36 @@ var Console = {
 
 };
 
+var changeLevel = function(id){
+	// Remove objects from scheduler
+	Game.objects.forEach(function(o){
+		Game.scheduler.remove(o);
+	});
+	
+	//Old objects into level
+	Game.level.objects = Game.objects;
+	Game.level.guards = Game.guards;
+	
+	//Swap the level
+	Game.level = Game.levels[id];
+	//New objects from level
+	Game.guards = Game.level.guards;
+	Game.objects = Game.level.guards;
+	var p = findFree();
+		var g = null;
+		var i;
+		Game.player = new Player(p.x, p.y);
+	Game.objects.add(this.player);
+	this.scheduler.add(this.player, true);
+};
 
-
-var TileMap = function (w, h) { //Class for base map functionality
+var TileLevel = function (w, h) { //Class for base level functionality
 	this.tiles = {};
 	this.w = w;
 	this.h = h;
+	
+	this.objects = new Set();
+	this.guards = new Set();
 };
 /* TILE SYNTAX
 var tile = {
@@ -177,7 +215,7 @@ var tile = {
 	unlit:
 	midlit:
 */
-TileMap.prototype.getBg = function(x, y){
+TileLevel.prototype.getBg = function(x, y){
 	if(Game.drawfov)
 		if(!(x+","+y in Game.drawfov))
 			return this.tiles[x + "," + y].unlit;
@@ -187,8 +225,8 @@ TileMap.prototype.getBg = function(x, y){
 		return this.tiles[x + "," + y].midlit;
 };
 
-//Draws whole map.
-TileMap.prototype.draw = function () {
+//Draws whole level.
+TileLevel.prototype.draw = function () {
 
 	var i, j, tile;
 	for (i = 0; i < this.w; i++){
@@ -201,67 +239,16 @@ TileMap.prototype.draw = function () {
 
 };
 //Callback for FOV calculations, used for pathfinding too. good for me :D
-var lightPasses = function(x, y){
-	var key = x + "," + y;
-	if(!(key in Game.map.tiles)) return false;
-	var tile = Game.map.tiles[key];
-	if (tile.type == "floor") { return true; }
-	else { return false; }
-};
-//Callback for PATHFINDING, not needed. YET! When smoke is introduced.
 
-//Finds a random free point on the map
-var findFree = function(){
-
-	var pX, pY;
-	
-	do {
-		pX = ROT.RNG.getUniform() * (Game.gameWidth - 2) + 1;
-		pY = ROT.RNG.getUniform() * (Game.gameHeight- 2) + 1;
-		pX = Math.floor(pX);
-		pY = Math.floor(pY);
-	} while (Game.map.tiles[pX + "," + pY].type == "wall");
-	
-	return {x: pX, y: pY};
-	
-};
-
-//Turns coordinates to ROT.DIRS[8]
-var getDir = function(x,y){
-
-	var l, lim;
-	
-	lim = 0.8; //Arbitary(estimate) value used to compare which octant the dir is in
-	l = Math.sqrt(x*x + y*y);
-	if(l === 0){ return 0;}//no dir. return 0 to avoid freeze. Or well default is up.
-	x /= l;
-	y /= l;
-	
-	if(y < -lim) return 0;//UP
-	if(y > lim) return 4;//DOWN
-	if(x < -lim) return 6;//REFT
-	if(x > lim) return 2;//RIGHT
-	if(x > 0 && y > 0) return 3;//DOWNRIGHT
-	if(x > 0 && y < 0) return 1;//UPRIGHT
-	if(x < 0 && y > 0) return 5;//DOWNLEFT
-	if(x < 0 && y < 0) return 7;//UPLEFT
-	
-};
-//Simple helper for stuff.
-distance = function(a, b){
-	var dx, dy;
-	dx = a.x - b.x;
-	dy = a.y - b.y;
-	if(dx < 0) dx = -dx;
-	if(dy < 0) dy = -dy;
-	
-	return Math.sqrt(dx*dx + dy*dy);
-};
 
 	Game.init();
 	Console._init();
+	Game.levels[1].draw();
+	alert("");
 	Game.engine.start();
-	Console.message("The Games have begun");
+	
+	Console.message("Kill the lord or face death!");
+	
 
 
 

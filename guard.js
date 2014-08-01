@@ -12,7 +12,7 @@ var Guard = function(xx, yy) {
 	/*
 		sentry = guard randomly rotates around the spot. Possibility to go on patrol
 		patrol = guard chooses a random point and goes there. Starts to sentry at destination
-		search = guard chooses a point on heatmap and goes there. Repeats until no heat
+		search = guard chooses a point on heatlevel and goes there. Repeats until no heat
 		chase = guard moves towards player when seen. When player is lost, defaults to search
 	*/
 	this.facing = Math.floor(ROT.RNG.getUniform()*7.99); //Random facing for the guard
@@ -152,7 +152,7 @@ Guard.prototype.act = function(){
 					this.y + dir[1], 
 					this._facinglines[(this.facing + i + 8)%8], 
 					"#0f0", 
-					Game.map.getBg(this.x + dir[0], this.y + dir[1]));
+					Game.level.getBg(this.x + dir[0], this.y + dir[1]));
 			}
 		}
 		//THE FIRST TIME YOU ENCOUNTER A GUARD
@@ -186,7 +186,7 @@ Guard.prototype.act = function(){
 			heatSet(Game.player.x, Game.player.y, 16);
 			if(this.state != "chase") 
 				Console.message("A %c{green}Guard%c{} has %c{yellow}seen %c{}you!");
-			Game.display.draw(this.x, this.y - 1, "!", "#f00", Game.map.getBg(this.x, this.y - 1));
+			Game.display.draw(this.x, this.y - 1, "!", "#f00", Game.level.getBg(this.x, this.y - 1));
 			this.state = "chase";
 		}
 	}//END OF SIGHT
