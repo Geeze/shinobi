@@ -95,10 +95,7 @@ Player.prototype.handleEvent = function(e){
 	} else { return; }
 
 	//Render
-	Game.level.draw();
-	Game.drawfov = {};
-	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
-	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
+	this.draw();
 	
 	//On to next turn
 	window.removeEventListener("keydown", this);
@@ -119,6 +116,14 @@ Player.prototype.fovCallback = function(x, y, r, visibility){
 	else
 		Game.display.draw(x, y, tile.char, tile.color, tile.midlit);
 	Game.drawfov[x + "," + y] = true;
+	
+};
+
+Player.prototype.draw = function(){
+	Game.level.draw();
+	Game.drawfov = {};
+	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
+	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
 	
 };
 

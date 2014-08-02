@@ -22,19 +22,22 @@ var Util = {
 	/*
 		Finds a random free point on the level
 	*/
-	findFree: function(){
-
+	findFree: function(level){
+		var l;
+		if(arguments.length === 0){
+			l = Game.level;
+		} else {
+			l = level;
+		}
 		var pX, pY;
-		try{
+		
 			do {
-				pX = ROT.RNG.getUniform() * (Game.gameWidth - 2) + 1;
-				pY = ROT.RNG.getUniform() * (Game.gameHeight- 2) + 1;
+				pX = ROT.RNG.getUniform() * (l.w - 2) + 1;
+				pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 				pX = Math.floor(pX);
 				pY = Math.floor(pY);
-			} while (Game.level.tiles[pX + "," + pY].type == "wall");
-		} catch (e) {
-			alert(pX + "," + pY);
-		} 
+			} while (l.tiles[pX + "," + pY].type == "wall");
+		 
 		return {x: pX, y: pY};
 		
 	},

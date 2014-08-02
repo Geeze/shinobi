@@ -19,8 +19,8 @@ var Game = { //Game container
 	drawfov: {},
 
 	//Lists of objects
-	objects: new Set(),	//Things that go to scheduler
-	guards: new Set(),
+	objects: null,	//Things that go to scheduler
+	guards: null,
 	player: null,
 	lord: null,
 
@@ -30,8 +30,16 @@ var Game = { //Game container
 		this.display = new ROT.Display({
 			width: this.gameWidth,
 			height: this.gameHeight
+			
 		});
 		document.body.appendChild(this.display.getContainer());
+		this.scheduler = new ROT.Scheduler.Simple();
+		this.engine = new ROT.Engine(this.scheduler);
+		
+		this.fov = new ROT.FOV.RecursiveShadowcasting(Util.lightPasses);
+		
+		
+		this.scheduler.add(new MainMenu(), true);
 		
 		//CREATE MAP
 		//Deal with the devil
@@ -43,7 +51,7 @@ var Game = { //Game container
 		//*/
 		
 		//Use if you need to test consistency? Or whe you need to know guard positions
-		
+		/* HERE IS PREVIOUS LEVEL START CODE
 		this.level = new TileLevel(this.gameWidth, 25);
 		var gen = new ROT.Map.Digger(this.gameWidth, 25, {
 			dugPercentage: 0.5, 
@@ -68,10 +76,7 @@ var Game = { //Game container
 		
 		gen.create(digCallback);
 		
-		//CREATE SCHEDULER
-		this.scheduler = new ROT.Scheduler.Simple();
-		this.engine = new ROT.Engine(this.scheduler);
-
+		
 		//SPAWN CREATURES
 		var p = Util.findFree();
 		var g = null;
@@ -98,7 +103,7 @@ var Game = { //Game container
 		this.objects.add(this.player);
 		
 		//CREATE FOV and draw first turn
-		this.fov = new ROT.FOV.RecursiveShadowcasting(Util.lightPasses);
+		
 		Game.level.draw();
 		Game.fov.compute(
 			Game.player.x,
@@ -114,7 +119,7 @@ var Game = { //Game container
 		Game.display.draw(this.lord.x, this.lord.y, "X");
 		//HEAT Level
 		Heat.init();
-		/*
+		
 		Heat.set(this.player.x, this.player.y, 54);
 		var ii = 32;
 		while(ii > 0){
@@ -124,7 +129,6 @@ var Game = { //Game container
 		Heat.draw();
 		//*/
 		
-		//INIT MOUSE
 		
 	}
 
@@ -167,55 +171,6 @@ var Console = {
 };
 
 
-
-var TileLevel = function (w, h) { //Class for base level functionality
-	this.tiles = {};
-	this.w = w;
-	this.h = h;
-};
-/* TILE SYNTAX
-var tile = {
-	x:
-	y:
-	char:
-	color:
-	type: //wall ? floor
-	bg:
-	unlit:
-	midlit:
-*/
-TileLevel.prototype.getBg = function(x, y){
-	if(Game.drawfov)
-		if(!(x+","+y in Game.drawfov))
-			return this.tiles[x + "," + y].unlit;
-	if(Util.distance({x:x,y:y}, Game.player) < 10)
-		return this.tiles[x + "," + y].bg;
-	else
-		return this.tiles[x + "," + y].midlit;
-};
-
-//Draws whole level.
-TileLevel.prototype.draw = function () {
-
-	var i, j, tile;
-	for (i = 0; i < this.w; i++){
-		for (j = 0; j < this.h; j++){
-			tile = this.tiles[i + "," + j];
-			if(tile !== null)
-				Game.display.draw(i, j ,tile.char, tile.color, tile.unlit);//TODO Add color
-		}
-	}
-
-};
-//Callback for FOV calculations, used for pathfinding too. good for me :D
-
-
-	Game.init();
-	Console._init();
-
-	Game.engine.start();
-	
-	Console.message("Kill the lord or face death!");
 	
 
 

@@ -36,7 +36,7 @@ var Guard = function(xx, yy) {
 };
 
 Guard.prototype.act = function(){
-	
+	console.log(this.state);
 	var p, dx, dy;
 
 	//SENTRY
@@ -134,7 +134,7 @@ Guard.prototype.act = function(){
 	
 	//DRAW
 	if(this.x + "," + this.y in Game.drawfov) {
-	
+		console.log("guard is drawn at "+ this.x + "," + this.y);
 		Game.display.draw(
 			this.x, 
 			this.y,  
@@ -169,12 +169,12 @@ Guard.prototype.act = function(){
 	if(this.state != "stunned"){
 	
 		this.fov = {};
-		var fov = this.fov; //allows fov to be used in delegate(?)
+		var fove = this.fov; //allows fov to be used in delegate(?)
 		
 		//CALCULATE FOV
 		Game.fov.compute90(this.x, this.y, 10, this.facing, function(xx, yy, r, visibility){
 		
-			fov[xx + "," + yy] = true;
+			fove[xx + "," + yy] = true;
 			if(!(Game.player.x == xx & Game.player.y == yy))
 				Heat.remove(xx, yy);
 				
