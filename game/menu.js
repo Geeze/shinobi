@@ -54,9 +54,34 @@ MainMenu.prototype = {
 			if(this.selection == 3){
 				window.location.replace('http://i2.kym-cdn.com/photos/images/original/000/711/753/094.jpg');
 			}
+			if(this.selection == 0){
+				this.startGame();
+			}
 		}
 		window.removeEventListener("keydown", this);
 		Game.engine.unlock();
+	},
+	
+	startGame: function(){
+		//CREATE SCHEDULER
+		
+		var lvl = new TileLevel(70,25);
+		lvl.generate();
+		
+		var p = Util.findFree(lvl);
+		Game.player = new Player(p.x, p.y);
+		
+		lvl.load();
+		
+		lvl.guards.forEach(function(g){
+			g.startPatrol(p.x, p.y);		//Start patrol
+						//Add guard to gameloop
+		});
+		
+		Heat.init();
+		Game.scheduler.add(Game.player, true);
+		Game.scheduler.remove(this);
+		Game.player.draw();
 	}
 
 };

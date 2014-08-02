@@ -19,8 +19,8 @@ var Game = { //Game container
 	drawfov: {},
 
 	//Lists of objects
-	objects: new Set(),	//Things that go to scheduler
-	guards: new Set(),
+	objects: null,	//Things that go to scheduler
+	guards: null,
 	player: null,
 	lord: null,
 
@@ -29,16 +29,18 @@ var Game = { //Game container
 		//Main level display
 		this.display = new ROT.Display({
 			width: this.gameWidth,
-			height: this.gameHeight,
+			height: this.gameHeight
 			
 		});
 		document.body.appendChild(this.display.getContainer());
-		
-		//CREATE SCHEDULER
 		this.scheduler = new ROT.Scheduler.Simple();
 		this.engine = new ROT.Engine(this.scheduler);
 		
+		this.fov = new ROT.FOV.RecursiveShadowcasting(Util.lightPasses);
+		
+		
 		this.scheduler.add(new MainMenu(), true);
+		
 		//CREATE MAP
 		//Deal with the devil
 		//ROT.RNG.setSeed(666);
@@ -101,7 +103,7 @@ var Game = { //Game container
 		this.objects.add(this.player);
 		
 		//CREATE FOV and draw first turn
-		this.fov = new ROT.FOV.RecursiveShadowcasting(Util.lightPasses);
+		
 		Game.level.draw();
 		Game.fov.compute(
 			Game.player.x,
@@ -127,7 +129,6 @@ var Game = { //Game container
 		Heat.draw();
 		//*/
 		
-		//INIT MOUSE
 		
 	}
 
