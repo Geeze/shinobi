@@ -29,12 +29,7 @@ var Util = {
 		} else {
 			l = level;
 		}
-		if(arguments.length < 2){
-			avoid = 0;
-			dist = 1;
-		} else {
-			dist = this.distance(Game.player,{x:pX,y:pY});
-		}
+		
 		var pX, pY;
 		
 			do {
@@ -42,6 +37,13 @@ var Util = {
 				pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 				pX = Math.floor(pX);
 				pY = Math.floor(pY);
+				if(arguments.length < 2){
+					avoid = 0;
+					dist = 1;
+				} else {
+					dist = this.distance(Game.player,{x:pX,y:pY});
+				}
+				
 			} while (l.tiles[pX + "," + pY].type == "wall" || dist < avoid);
 		 
 		return {x: pX, y: pY};
