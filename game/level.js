@@ -27,7 +27,7 @@ TileLevel.prototype = {
 	
 	getBg: function(x, y){
 		if(Game.drawfov)
-			if(!(x+","+y in Game.drawfov))
+			if(!(x + "," + y in Game.drawfov))
 				return this.tiles[x + "," + y].unlit;
 		if(Util.distance({x:x,y:y}, Game.player) < 10)
 			return this.tiles[x + "," + y].bg;
@@ -50,13 +50,30 @@ TileLevel.prototype = {
 	},
 
 	load: function () {
+		//SPAWN
+		//SPAWN CREATURES
+		var p = Util.findFree(this);
+		var g = null;
+		var i;
+		for (i = 0; i < 8; i++) {
+			p = Util.findFree(this,10);		
+			g = new Guard(p.x, p.y);		
+			this.objects.add(g);
+			this.guards.add(g);
+		}
+		
+		p = Util.findFree(this,30);
+		this.lord = new Lord(p.x, p.y);
+		this.objects.add(this.lord);
+		
+		//END SPAWN
 		Game.level = this;
 		Game.guards = this.guards;
 		Game.objects = this.objects;
 		Game.lord = this.lord;
 		
 		this.objects.forEach(function(o){
-			Game.scheduler.add(o);
+			Game.scheduler.add(o,true);
 			console.log("Object added to scheduler");
 		});
 		
@@ -99,24 +116,7 @@ TileLevel.prototype = {
 		gen.create(digCallback);
 		
 		
-		//SPAWN CREATURES
-		var p = Util.findFree(this);
-		var g = null;
-		var i;
-		for (i = 0; i < 8; i++) {//TODO: CHANGE BACK
-			p = Util.findFree(this);		//Find free position
-			g = new Guard(p.x, p.y);		//Put guard there
-			this.objects.add(g);
-			this.guards.add(g);
-			p = Util.findFree(this);					//Find destination for patrol
-			//g.startPatrol(p.x, p.y);		//Start patrol
-			//Game.scheduler.add(g, true);			//Add guard to gameloop
-		}
-		//this.scheduler.add(this.player, true);
-		p = Util.findFree(this);
-		this.lord = new Lord(p.x, p.y);
-		this.objects.add(this.lord);
-		//this.scheduler.add(this.lord, true);
+		
 		
 	
 	}

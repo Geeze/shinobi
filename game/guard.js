@@ -133,8 +133,10 @@ Guard.prototype.act = function(){
 	}
 	
 	//DRAW
+	//console.log("guard at " + this.x + "," + this.y + " seen " + Game.drawfov.has([this.x,this.y]));
+	
 	if(this.x + "," + this.y in Game.drawfov) {
-		console.log("guard is drawn at "+ this.x + "," + this.y);
+		
 		Game.display.draw(
 			this.x, 
 			this.y,  

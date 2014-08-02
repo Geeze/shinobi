@@ -7,6 +7,7 @@ var Player = function(xx, yy) {
 	this.color = "#000";
 
 	this.points = 0;
+	this.kills = 0;
 };
 Player.prototype.act = function(){
 	this.points += 1;
@@ -66,10 +67,26 @@ Player.prototype.handleEvent = function(e){
 				Console.message("Victory.");
 				Console.message("%c{grey}You commit sudoku");
 				Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
+				Console.message("Lords slaughtered so far: %c{yellow}" + ++this.kills);
 				window.removeEventListener("keydown", this);
 				window.removeEventListener("mousedown", this.mouse);
 				
-				Game.engine.lock();
+				//New level
+				var lvl = new TileLevel(70,25);
+				lvl.generate();
+				Game.level.unload();
+				lvl.load();
+				var p = Util.findFree(lvl);
+				//Game.player = new Player(p.x, p.y);
+				Game.player.x = p.x;
+				Game.player.y = p.y;
+				lvl.guards.forEach(function(g){
+					p = Util.findFree(lvl);
+					g.startPatrol(p.x, p.y);		//Start patrol
+				});
+		
+				Heat.init();
+				Game.engine.unlock();
 				return;
 			}
 		}

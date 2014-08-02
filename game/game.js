@@ -130,8 +130,19 @@ var Game = { //Game container
 		//*/
 		
 		
-	}
+	},
 
+	_fovequals: function(a, b){
+		if(Math.floor(a[0]) == Math.floor(b[0]) && Math.floor(a[1]) == Math.floor(b[1])){
+			return true;
+		} else {
+			return false;
+		}
+	},
+	_fovhash: function(object){
+		return Math.floor(object[0]) + "," + Math.floor(object[1]);//object[0]+300*object[1];
+	}
+	
 };
 //CONSOLE well selfexplanatory
 var Console = {
@@ -167,7 +178,7 @@ var Console = {
 		this.messages[4] = string;
 		this.display.drawText(0,4, string);
 	}
-
+	
 };
 
 

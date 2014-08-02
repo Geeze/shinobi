@@ -84,6 +84,7 @@ Lord.prototype.act = function(){
 	}
 	
 	console.log(this.x + "," + this.y);
+	//Util.debugfov();
 	if(this.x + "," + this.y in Game.drawfov) {
 		Game.display.draw(
 			this.x,

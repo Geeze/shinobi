@@ -22,12 +22,18 @@ var Util = {
 	/*
 		Finds a random free point on the level
 	*/
-	findFree: function(level){
+	findFree: function(level, avoid){
 		var l;
 		if(arguments.length === 0){
 			l = Game.level;
 		} else {
 			l = level;
+		}
+		if(arguments.length < 2){
+			avoid = 0;
+			dist = 1;
+		} else {
+			dist = this.distance(Game.player,{x:pX,y:pY});
 		}
 		var pX, pY;
 		
@@ -36,7 +42,7 @@ var Util = {
 				pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 				pX = Math.floor(pX);
 				pY = Math.floor(pY);
-			} while (l.tiles[pX + "," + pY].type == "wall");
+			} while (l.tiles[pX + "," + pY].type == "wall" || dist < avoid);
 		 
 		return {x: pX, y: pY};
 		
@@ -73,6 +79,19 @@ var Util = {
 		if(dy < 0) dy = -dy;
 		
 		return Math.sqrt(dx*dx + dy*dy);
+	},
+	debugfov: function(){
+		
+		Game.drawfov.forEach(function(p){
+			Game.display.draw(p[0],p[1],"y");
+		});
+		for(var i = 0; i < 70; i++){
+			for(var j = 0; j < 25; j++){
+				if(Game.drawfov.get([i ,j]) == [i, j]){
+					Game.display.draw(i,j,"x");
+				}
+			}
+		}
+		
 	}
-
 };
