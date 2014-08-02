@@ -30,8 +30,8 @@ MainMenu.prototype = {
 			else
 				Game.display.drawText(this.menuX, this.menuY + i, "%c{white}%b{black}"+this.lines[i]);
 		}
-		for(i = 0; i < this.ninja.length; i++){
-				Game.display.drawText(this.ninjaX, this.ninjaY + i, "%c{yellow}"+this.ninja[i]);
+		for(i = this.ninja.length - 1; i >= 0; i--){
+				Game.display.drawText(this.ninjaX, this.ninjaY + i, /*"%c{yellow}"+*/this.ninja[i]);
 		}
 		
 		console.log("menu drawn");
@@ -49,6 +49,11 @@ MainMenu.prototype = {
 			this.selection += 1;
 			if(this.selection == this.lines.length)
 				this.selection = 0;
+		}
+		if(e.keyCode == 32){//space
+			if(this.selection == 3){
+				window.location.replace('http://i2.kym-cdn.com/photos/images/original/000/711/753/094.jpg');
+			}
 		}
 		window.removeEventListener("keydown", this);
 		Game.engine.unlock();
