@@ -13,7 +13,14 @@ var Util = {
 		var key = x + "," + y;
 		if(!(key in Game.level.tiles)) return false;
 		var tile = Game.level.tiles[key];
-		if (tile.type == "floor") { return true; }
+		if (!tile.blockslos) { return true; }
+		else { return false; }
+	},
+	walkable: function(x, y){
+		var key = x + "," + y;
+		if(!(key in Game.level.tiles)) return false;
+		var tile = Game.level.tiles[key];
+		if (tile.walkable) { return true; }
 		else { return false; }
 	},
 
@@ -22,13 +29,14 @@ var Util = {
 	/*
 		Finds a random free point on the level
 	*/
-	findFree: function(level){
+	findFree: function(level, avoid){
 		var l;
 		if(arguments.length === 0){
 			l = Game.level;
 		} else {
 			l = level;
 		}
+		
 		var pX, pY;
 		
 			do {
@@ -36,7 +44,14 @@ var Util = {
 				pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 				pX = Math.floor(pX);
 				pY = Math.floor(pY);
-			} while (l.tiles[pX + "," + pY].type == "wall");
+				if(arguments.length < 2){
+					avoid = 0;
+					dist = 1;
+				} else {
+					dist = this.distance(Game.player,{x:pX,y:pY});
+				}
+				
+			} while (l.tiles[pX + "," + pY].walkable === false || dist < avoid);
 		 
 		return {x: pX, y: pY};
 		
@@ -73,6 +88,32 @@ var Util = {
 		if(dy < 0) dy = -dy;
 		
 		return Math.sqrt(dx*dx + dy*dy);
-	}
-
+	},
+	debugfov: function(){
+		
+		Game.drawfov.forEach(function(p){
+			Game.display.draw(p[0],p[1],"y");
+		});
+		for(var i = 0; i < 70; i++){
+			for(var j = 0; j < 25; j++){
+				if(Game.drawfov.get([i ,j]) == [i, j]){
+					Game.display.draw(i,j,"x");
+				}
+			}
+		}
+		
+	},
+	
+	//FOR [x,y] pairs
+	//this._equals & this._hash, delegates(?) for the sets
+	_equals: function(a, b){
+		if(a[0] == b[0] && a[1] == b[1]){
+			return true;
+		} else {
+			return false;
+		}
+	},
+	_hash: function(object){
+		return object[0] + "," + object[1];//object[0]+300*object[1];
+	}	
 };

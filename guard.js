@@ -36,7 +36,6 @@ var Guard = function(xx, yy) {
 };
 
 Guard.prototype.act = function(){
-	console.log(this.state);
 	var p, dx, dy;
 
 	//SENTRY
@@ -87,7 +86,7 @@ Guard.prototype.act = function(){
 		
 			//TAKE STEPS TOWARDS PLAYER, has to re-evaluate path every turn!
 			this.path = [];
-			var astar = new ROT.Path.AStar(Game.player.x, Game.player.y, Util.lightPasses);
+			var astar = new ROT.Path.AStar(Game.player.x, Game.player.y, Util.walkable);
 			var d = false;
 			var g = this;
 			astar.compute(this.x, this.y, function(x, y){
@@ -113,7 +112,7 @@ Guard.prototype.act = function(){
 			
 			}
 			
-			if(this.path.length < 2){//PLAYER IN REACH
+			if(Util.distance(this, Game.player)<2){//PLAYER IN REACH
 				Game.engine.lock();
 				Console.message("%c{red}GAME OVER%c{} - You got caught! %c{cyan}Press F5/Refresh to restart");
 			}
@@ -133,8 +132,10 @@ Guard.prototype.act = function(){
 	}
 	
 	//DRAW
+	
+	
 	if(this.x + "," + this.y in Game.drawfov) {
-		console.log("guard is drawn at "+ this.x + "," + this.y);
+		
 		Game.display.draw(
 			this.x, 
 			this.y,  
@@ -197,7 +198,7 @@ Guard.prototype.act = function(){
 */
 Guard.prototype.startPatrol = function(x, y){
 
-	var astar = new ROT.Path.AStar(x, y, Util.lightPasses);
+	var astar = new ROT.Path.AStar(x, y, Util.walkable);
 	var d = false;//checks if path was created. if not go b to sentry
 	var g = this;
 	
@@ -220,7 +221,7 @@ Guard.prototype.startPatrol = function(x, y){
 Guard.prototype.startSearch = function(x, y){
 	var p = Heat.find(x,y);
 	if(!p){
-		this.state = "sentry";
+		this.state = "patrol";
 		return;
 	}
 	this.startPatrol(p[0], p[1]);
