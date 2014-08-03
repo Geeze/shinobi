@@ -92,8 +92,7 @@ Lord.prototype.act = function(){
 			this.char,
 			this.color,
 			this.bg);
-		console.log("drawn at " + this.x + "," + this.y + " facing " + this.facing);
-		console.log("player at " + Game.player.x + "," + Game.player.y);
+	
 		//Draw the viewcone
 		var dir, i;
 		if(this.state != "escape")

@@ -65,8 +65,8 @@ MainMenu.prototype = {
 	startGame: function(){
 		//CREATE SCHEDULER
 		
-		var lvl = new TileLevel(70,25);
-		lvl.generate();
+		var lvl = Game.world.levels[0];
+		console.log(lvl);
 		
 		var p = Util.findFree(lvl);
 		Game.player = new Player(p.x, p.y);

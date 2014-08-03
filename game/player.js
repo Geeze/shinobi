@@ -67,7 +67,7 @@ Player.prototype.handleEvent = function(e){
 				Console.message("Victory.");
 				Console.message("%c{grey}You commit sudoku");
 				Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
-				Console.message("Lords slaughtered so far: %c{yellow}" + ++this.kills);
+				Console.message("Lords slaughtered so far: %c{yellow}" + (++this.kills));
 				window.removeEventListener("keydown", this);
 				window.removeEventListener("mousedown", this.mouse);
 				

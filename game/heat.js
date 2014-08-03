@@ -25,7 +25,7 @@ var Heat = {
 		//3x3 grid around current node, TODO: Util.lightPasses might have to be refactored into something else later
 		for(i = -1; i <= 1; i++){
 			for(j = -1; j <= 1; j++){
-				if(Util.lightPasses(node[0] + i, node[1] + j)){
+				if(Util.walkable(node[0] + i, node[1] + j)){
 					n.add([node[0] + i, node[1] + j]);
 				}
 			}
@@ -85,7 +85,14 @@ var Heat = {
 		var dist, node, curDist;
 		dist = 999999999;
 		this.oldNodes.forEach(function(p){
-			curd = Math.abs(x-p[0])+Math.abs(y-p[1]);
+			curDist = Math.abs(x-p[0])+Math.abs(y-p[1]);
+			if(curDist < dist){
+				dist = curDist;
+				node = p;
+			}
+		});
+		this.freshNodes.forEach(function(p){
+			curDist = Math.abs(x-p[0])+Math.abs(y-p[1]);
 			if(curDist < dist){
 				dist = curDist;
 				node = p;

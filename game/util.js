@@ -13,7 +13,14 @@ var Util = {
 		var key = x + "," + y;
 		if(!(key in Game.level.tiles)) return false;
 		var tile = Game.level.tiles[key];
-		if (tile.type == "floor") { return true; }
+		if (!tile.blockslos) { return true; }
+		else { return false; }
+	},
+	walkable: function(x, y){
+		var key = x + "," + y;
+		if(!(key in Game.level.tiles)) return false;
+		var tile = Game.level.tiles[key];
+		if (tile.walkable) { return true; }
 		else { return false; }
 	},
 
@@ -44,7 +51,7 @@ var Util = {
 					dist = this.distance(Game.player,{x:pX,y:pY});
 				}
 				
-			} while (l.tiles[pX + "," + pY].type == "wall" || dist < avoid);
+			} while (l.tiles[pX + "," + pY].walkable === false || dist < avoid);
 		 
 		return {x: pX, y: pY};
 		
@@ -95,5 +102,18 @@ var Util = {
 			}
 		}
 		
-	}
+	},
+	
+	//FOR [x,y] pairs
+	//this._equals & this._hash, delegates(?) for the sets
+	_equals: function(a, b){
+		if(a[0] == b[0] && a[1] == b[1]){
+			return true;
+		} else {
+			return false;
+		}
+	},
+	_hash: function(object){
+		return object[0] + "," + object[1];//object[0]+300*object[1];
+	}	
 };
