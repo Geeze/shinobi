@@ -5,7 +5,7 @@ ROT.DEFAULT_HEIGHT = 25;
 
 var Game = { //Game container
 
-	//ENGINE
+	//critical stuff
 	display: null,
 	level: null,
 	scheduler: null,

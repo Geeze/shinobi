@@ -64,7 +64,7 @@ MainMenu.prototype = {
 	
 	startGame: function(){
 		//CREATE SCHEDULER
-		
+		Game.display.clear();
 		var lvl = Game.world.levels[0];
 		console.log(lvl);
 		

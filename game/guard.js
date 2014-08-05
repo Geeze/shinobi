@@ -1,5 +1,7 @@
 
 var Guard = function(xx, yy) {
+
+	this.time = 0;
 	//Position
 	this.x = xx;
 	this.y = yy;
@@ -36,6 +38,7 @@ var Guard = function(xx, yy) {
 };
 
 Guard.prototype.act = function(){
+	this.time++;
 	var p, dx, dy;
 
 	//SENTRY
@@ -118,7 +121,7 @@ Guard.prototype.act = function(){
 			}
 		} else {//LOST THE PLAYER
 			Console.message("The %c{green}Guard%c{} has %c{yellow}lost%c{} you.");
-			this.state = "search"; //Here is the beauty, the chase route is used for patrol automatically meaning they'll go where player was last seen, to try find him.
+			this.startSearch(this.x, this.y); //Here is the beauty, the chase route is used for patrol automatically meaning they'll go where player was last seen, to try find him.
 		}
 	}//END OF CHASE
 	
@@ -126,8 +129,8 @@ Guard.prototype.act = function(){
 	if(this.state == "stunned"){
 		this.stuntime -= 1;
 		if(this.stuntime <= 0){
-			this.state = "sentry";
 			Console.message("The %c{green}Guard%c{} wakes up.");
+			this.startSearch(this.x,this.y);
 		}
 	}
 	
@@ -135,10 +138,10 @@ Guard.prototype.act = function(){
 	
 	
 	if(this.x + "," + this.y in Game.drawfov) {
-		
+		var p = Util.cam(this.x, this.y);
 		Game.display.draw(
-			this.x, 
-			this.y,  
+			p.x, 
+			p.y,  
 			this.char, 
 			this.color, 
 			this.bg);
@@ -149,8 +152,8 @@ Guard.prototype.act = function(){
 			for(i = -1; i < 2; i++){
 				dir = ROT.DIRS[8][(this.facing + i + 8)%8];
 				Game.display.draw(
-					this.x + dir[0], 
-					this.y + dir[1], 
+					p.x + dir[0], 
+					p.y + dir[1], 
 					this._facinglines[(this.facing + i + 8)%8], 
 					"#0f0", 
 					Game.level.getBg(this.x + dir[0], this.y + dir[1]));
@@ -183,12 +186,15 @@ Guard.prototype.act = function(){
 		
 		//WHEN GUARD SEES PLAYER
 		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible){//Condition for if player is seen. reusable
+			Console.message("You went unnoticed for " + this.time + " turns.");
+			this.time = 0;
 			Heat.init();
-			Heat.set(Game.player.x, Game.player.y, 16);
+			Heat.set(Game.player.x, Game.player.y, 999);
 			if(this.state != "chase") 
 				Console.message("A %c{green}Guard%c{} has %c{yellow}seen %c{}you!");
-			Game.display.draw(this.x, this.y - 1, "!", "#f00", Game.level.getBg(this.x, this.y - 1));
+			Game.display.draw(p.x, p.y - 1, "!", "#f00", Game.level.getBg(this.x, this.y - 1));
 			this.state = "chase";
+			
 		}
 	}//END OF SIGHT
 };

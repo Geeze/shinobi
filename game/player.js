@@ -8,12 +8,14 @@ var Player = function(xx, yy) {
 
 	this.points = 0;
 	this.kills = 0;
+	
 };
 Player.prototype.act = function(){
 	this.points += 1;
 	Heat.spread();
 	
-	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
+	var dp = Util.cam(this.x,this.y);
+	Game.display.draw(dp.x, dp.y, this.char, this.color, "yellow");
 	Game.engine.lock();
 	window.addEventListener("keydown", this);
 	window.addEventListener("mousedown", this.mouse);
@@ -55,11 +57,11 @@ Player.prototype.handleEvent = function(e){
 	var dir = ROT.DIRS[8] [keyLevel[code]];
 	var newX = dir[0] + this.x;
 	var newY = dir[1] + this.y;
-	var newKey = newX + "," + newY;
-	var newTile = Game.level.tiles[newKey];
+	//var newKey = newX + "," + newY;
+	//var newTile = Game.level.tiles[newKey];
 	
 	//Moving
-	if(newTile.type == "floor"){
+	if(Util.walkable(newX, newY)){
 		//This is the part where we kill the lord(batman)
 		if(Game.lord){
 			if(Game.lord.x == newX && Game.lord.y == newY){
@@ -104,8 +106,8 @@ Player.prototype.handleEvent = function(e){
 		});
 	
 	
-		var old = Game.level.tiles[this.x + "," + this.y];
-		Game.display.draw(old.x, old.y, old.char, old.color, old.bg);
+		//var old = Game.level.tiles[this.x + "," + this.y];
+		//Game.display.draw(old.x, old.y, old.char, old.color, old.bg);
 		this.x = newX;
 		this.y = newY;
 		Console.message("%c{grey}You sneak around.");//Displayed only if not the most recent message.
@@ -126,12 +128,13 @@ Player.prototype.fovCallback = function(x, y, r, visibility){
 	//if(!(key in Game.level.tiles)) return;
 	key = x + "," + y;
 	tile = Game.level.tiles[key];
+	var dp = Util.cam(x,y);
 	//alert(x + "," + y);
 	if(!tile) { return; }
 	if(r < 10)
-		Game.display.draw(x, y, tile.char, tile.color, tile.bg);
+		Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.bg);
 	else
-		Game.display.draw(x, y, tile.char, tile.color, tile.midlit);
+		Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.midlit);
 	Game.drawfov[x + "," + y] = true;
 	
 };
@@ -140,7 +143,8 @@ Player.prototype.draw = function(){
 	Game.level.draw();
 	Game.drawfov = {};
 	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
-	Game.display.draw(this.x, this.y, this.char, this.color, "yellow");
+	var dp = Util.cam(this.x, this.y);
+	Game.display.draw(dp.x, dp.y, this.char, this.color, "yellow");
 	
 };
 
