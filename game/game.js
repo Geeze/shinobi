@@ -32,7 +32,8 @@ var Game = { //Game container
 			width: this.gameWidth,
 			height: this.gameHeight,
 			fontFamily: "Fixedsys",
-			spacing: 1
+			spacing: 1,
+			
 		});
 		document.body.appendChild(this.display.getContainer());
 		this.scheduler = new ROT.Scheduler.Simple();

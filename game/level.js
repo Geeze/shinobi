@@ -74,6 +74,7 @@ TileLevel.prototype = {
 	load: function () {
 		//SPAWN
 		//SPAWN CREATURES
+		/*
 		var p = Util.findFree(this);
 		var g = null;
 		var i;
@@ -94,7 +95,7 @@ TileLevel.prototype = {
 		//var e = new levelExit(p.x, p.y, lvl, "stair");
 		//this.exits.add(e);
 		
-		
+		*/
 		//END SPAWN
 		Game.level = this;
 		Game.guards = this.guards;
@@ -111,6 +112,7 @@ TileLevel.prototype = {
 		});
 		
 		this.draw();
+		outputLevel(this);
 	},
 	
 	unload: function () {
@@ -155,6 +157,46 @@ TileLevel.prototype = {
 		
 	}
 };
+
+var outputLevel = function(level){
+	var canvas = document.getElementById('output');
+	var context = canvas.getContext('2d');
+	
+	for (i = 0; i < level.w; i++){
+		for (j = 0; j < level.h; j++){
+			tile = level.tiles[(i) + "," + (j)];
+			if(tile !== null && tile !== undefined){
+				context.fillStyle = tile.bg;
+				context.fillRect(i*2,j*2,2,2);
+			}
+				
+		}
+	}
+	/* draw cloud
+	context.beginPath();
+	context.moveTo(170, 80);
+	context.bezierCurveTo(130, 100, 130, 150, 230, 150);
+	context.bezierCurveTo(250, 180, 320, 180, 340, 150);
+	context.bezierCurveTo(420, 150, 420, 120, 390, 100);
+	context.bezierCurveTo(430, 40, 370, 30, 340, 50);
+	context.bezierCurveTo(320, 5, 250, 20, 250, 50);
+	context.bezierCurveTo(200, 5, 150, 20, 170, 80);
+	context.closePath();
+	context.lineWidth = 5;
+	context.fillStyle = '#8ED6FF';
+	context.fill();
+	context.strokeStyle = '#0000ff';
+	context.stroke();
+	*/
+	// save canvas image as data url (png format by default)
+	var dataURL = canvas.toDataURL();
+
+	// set canvasImg image src to dataURL
+	// so it can be saved as an image
+	document.getElementById('canvasImg').src = dataURL;
+
+};
+
 
 
 

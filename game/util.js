@@ -75,7 +75,7 @@ var Util = {
 				}
 				
 			} while (l.tiles[pX + "," + pY].walkable === false || dist < avoid);
-		 console.log("No MORE");
+			console.log("No MORE");
 		return {x: pX, y: pY};
 		
 	},

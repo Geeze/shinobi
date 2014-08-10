@@ -83,7 +83,7 @@ MainMenu.prototype = {
 		Game.scheduler.add(Game.player, true);
 		Game.scheduler.remove(this);
 		Game.player.draw();
-		Game.display.draw(lvl.lord.x, lvl.lord.y, "X");
+		//Game.display.draw(lvl.lord.x, lvl.lord.y, "X");
 	}
 
 };

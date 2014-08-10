@@ -1,5 +1,5 @@
 /*
-	GENERATORSSS MAGICALLNESS OVERLOEAAAAAADDDDDD.
+	LEVEL GENERATOR CODE
 */
 /*
 	worldGraph 
@@ -34,6 +34,7 @@ worldGraph.prototype = {
 		}
 	}
 };
+
 /*
 	levelDescriptor
 	an object that contains basic information to levels, used to generate them
@@ -98,7 +99,6 @@ var levelGenerator = {
 		gen.create(digCallback);
 		//Handle descriptor
 		if(arguments.length > 0){
-			console.log(desc);
 			var exit = desc.exits[0];
 			var p = Util.findFree(level);
 			//level.exits.add(new levelExit(p.x,p.y,exit,"stair"));
@@ -160,25 +160,21 @@ var levelGenerator = {
 			for (var jjj = 0; jjj < h; jjj++){
 				digCallback(iii, jjj, map[iii][jjj]);
 			}
-			console.log("row " + iii + " done");
 		}
 		var exit = desc.exits[0];
 		//var p = Util.findFree(level);
 		//level.levelExit(p.x,p.y,exit,"stair");
-		console.log("level done");
 	},
 	/*
 		my attempt/implementation of tunneling algorithm
 	*/
 	tunnel: function(map, value){
-		
-		console.log("TUNEL STARTO!");
-		new Tunneler(50,50,0,4,35,map).dig();//right
-		new Tunneler(50,50,1,4,35,map).dig();//left
-		new Tunneler(50,50,2,4,35,map).dig();
-		new Tunneler(50,50,3,4,35,map).dig();
-		console.log("TUNEL FINISHU!");
-		
+		var bsp = new BSP(map.length,map[0].length, 10,7,25,20);
+		bsp.shortenEdges();
+		var self = this;
+		bsp.edges.forEach(function(e){
+			self.createRoad(map, e.x1,e.y1,e.x2,e.y2, e.width);
+		});
 	},
 	
 	
@@ -189,9 +185,230 @@ var levelGenerator = {
 					map[ii + x][jj + y] = 1;
 			}
 		}
-	}
+	},
+	createRoad: function(map,x1,y1,x2,y2,width){
+		//Lets assume road is never bended
+		//map is [][] of integers
+		var i, j, upper, lower;
+		
+			if(x2-x1 > y2-y1){//horizontal
+			
+				upper = y1 - Math.floor(width/2 - 0.1);
+				lower = y1 + Math.floor(width/2 + 0.1);
+				for(i = x1; i <= x2; i++){
+					for(j = upper; j <= lower; j++){
+						map[i][j] = 0;
+					}
+				}
+			
+			} else {//vertical
+				upper = x1 - Math.floor(width/2 - 0.1);
+				lower = x1 + Math.floor(width/2 + 0.1);
+				for(i = y1; i <= y2; i++){
+					for(j = upper; j <= lower; j++){
+						
+						map[j][i] = 0;
+					}
+				}
+			
+			}
+		
 	
+		
+	}
 };
+
+/* BSP - binary spatial partitioning. Not exactly tree
+	named after bsp tree even if not actual tree
+*/
+var BSP = function(w,h,minx,miny,maxx, maxy){
+	//variables
+	this.w = w;
+	this.h = h;
+	this.minx = minx;
+	this.maxx = maxx;
+	this.miny = miny;
+	this.maxy = maxy;
+	//list of nodes
+	this.nodes = new List();
+	this.newNodes = new List();
+	this.edges = new List();
+	this.root = null;
+	//Main node
+	var left = new BspEdge(this, 1, 0, 0, 0, h-1, 0);
+	var right = new BspEdge(this, 1, w-1, w-1, 0, h-1, 0);
+	var top = new BspEdge(this, 1, 0, w-1, 0, 0, 0);
+	var bottom = new BspEdge(this, 1, 0, w-1, h-1,h-1, 0);
+	this.edges.push(left,right,top,bottom);
+	this.root = new BspNode(this,top,bottom,left,right, 1);
+	this.newNodes.add(this.root);
+	var self = this;
+
+	this.split(this.root);
+};
+BSP.prototype = {
+	split: function(node){
+		node.split = true;
+		var direction = (node.orientation + 1)%2;//0 for horizontal 1 for vertical
+		console.log(direction);
+		var newEdge;
+		var x1,x2,y1,y2;
+			y1 = node.top.y1;
+			y2 = node.bottom.y2;
+			x1 = node.left.x1;
+			x2 = node.right.x2;
+		//Handle horizontal splits
+		if(direction === 0){
+			//Check if we can fit a new split.
+			if((y2-y1) > this.maxy){
+				//Calculate split Y
+				var y = y1 + this.miny + Math.floor(((y2-y1)-2*this.miny)*ROT.RNG.getUniform());
+				//Make edge
+				newEdge = new BspEdge(this, direction, x1, x2, y, y, ROT.RNG.getPercentage()%2+2);
+				//Add neighbors (edges this edge is connected to);
+				node.left.neighbors.add(newEdge);
+				node.right.neighbors.add(newEdge);
+				newEdge.neighbors.add(node.left);
+				newEdge.neighbors.add(node.right);
+				//Make new nodes
+				var upnode,downnode;
+				upnode = new BspNode(this, 
+					node.top, 
+					newEdge,
+					node.left,
+					node.right,
+					direction);
+				downnode = new BspNode(this, 
+					newEdge,
+					node.bottom,
+					node.left,
+					node.right,
+					direction);
+				
+				//Add references
+				node.childA = upnode;
+				node.childB = downnode;
+				this.newNodes.add(upnode);
+				this.newNodes.add(downnode);
+				this.edges.add(newEdge);
+				
+				//Recursive
+				this.split(upnode);
+				this.split(downnode);
+			}
+		}
+		
+		//Handle vertical splits. Nearly identical.
+		if(direction == 1) {
+			if((x2-x1) > this.maxx) {
+				var x = x1 + this.minx + Math.floor(((x2-x1)-2*this.minx)*ROT.RNG.getUniform());//Splits the node in half, but leaves each size atleast with min size
+				newEdge = new BspEdge(this, direction, x, x, y1, y2, ROT.RNG.getPercentage()%2+2);
+				newEdge.neighbors.add(node.top);
+				newEdge.neighbors.add(node.bottom);
+				node.top.neighbors.add(newEdge);
+				node.bottom.neighbors.add(newEdge);
+				
+				var leftnode,rightnode;
+				leftnode = new BspNode(this, 
+					node.top, 
+					node.bottom,
+					node.left,
+					newEdge,
+					direction);
+				rightnode = new BspNode(this, 
+					node.top,
+					node.bottom,
+					newEdge,
+					node.right,
+					direction);
+				
+				node.childA = leftnode;
+				node.childB = rightnode;
+				this.newNodes.add(leftnode);
+				this.newNodes.add(rightnode);
+				this.edges.add(newEdge);
+				this.split(leftnode);
+				this.split(rightnode);
+			}
+		}//END VERTICAL
+		
+		
+	},
+
+	shortenEdges: function(){
+		var self = this;
+		this.edges.forEach(function(edge){
+			//Check if connected to borders.
+			var minx, maxx, miny, maxy, border;
+			minx = 9999; maxx = 0;
+			miny = 9999; maxy = 0;
+			border = null;
+			edge.neighbors.forEach(function(n){
+				if(n.width === 0){//check if connected to border
+					if(border !== null) border = null; //if connected to both border dont do anything
+					else border = n;
+				} else {
+					//Get coordinates for edges.
+					minx = Math.min(minx, n.x1);
+					maxx = Math.max(maxx, n.x2);
+					miny = Math.min(miny, n.y1);
+					maxy = Math.max(maxy, n.y2);
+				}
+			});
+			//If not on border dont shorten.
+			if(border === null){
+				console.log("Edge not shortened");
+				return;
+			} else {
+				//Adjust new ends for edges
+				if(border == self.root.left) edge.x1 = minx;
+				if(border == self.root.right) edge.x2 = maxx;
+				if(border == self.root.top) edge.y1 = miny;
+				if(border == self.root.bottom) edge.y2 = maxy;
+				console.log("Edge shortened");
+			}
+		});
+	}
+};
+var BspEdge = function(bsp, orientation, x1, x2, y1, y2, width){
+	this.bsp = bsp;
+	this.orientation = orientation;
+	this.x1 = x1;
+	this.x2 = x2;
+	this.y1 = y1;
+	this.y2 = y2;
+	this.width = width;
+	this.neighbors = new Set();
+};
+BspEdge.prototype = {
+	bsp: null,
+	orientation: null, //hor or vertical
+	x1: null,
+	x2: null,
+	y1: null,
+	y2: null,
+	width: 1, //used for stuff...
+	neighbors: null //edges that connect to/divide this edge. 
+};
+var BspNode = function(bsp, top, bottom, left, right, orientation){
+	this.bsp = bsp;
+	this.top = top;
+	this.bottom = bottom;
+	this.left = left;
+	this.right = right;
+	this.orientation = orientation;
+	this.split = false;
+};
+BspNode.prototype = {
+	top: null,
+	bottom: null,
+	left: null,
+	right: null,
+	childA: null,
+	childB: null
+};
+
+
 
 
 /*
@@ -227,6 +444,15 @@ Rectangle.prototype = {
 	}
 };
 
+/*
+	Point
+	helper
+*/
+var Point = function(x, y){
+	this.x = x;
+	this.y = y;
+};
+
 var Tunneler = function(x,y,dir,width,life,map) {
 		this.x = x;
 		this.y = y;
@@ -235,17 +461,14 @@ var Tunneler = function(x,y,dir,width,life,map) {
 		this.life = life;
 		this.maxlife = life;
 		this.map = map;
-		console.log(this);
 };
 Tunneler.prototype.dig = function(){
-	//console.log("Diggydiggy hoole " + this.x + "," + this.y + " life:" + this.life + " width:" + this.width);
 	if(!(this.width > 0 && this.life > 0 )) return;
 	for (var i = this.x; i < this.x+this.width; i++){
 		for (var j = this.y; j < this.y+this.width; j++){
 			if(i > 0 && j > 0 && i < this.map.length && j < this.map[0].length){
 				this.map[i][j] = 0;
 			} else {
-				//console.log(this.map);
 				
 			}
 		}
@@ -258,10 +481,10 @@ Tunneler.prototype.dig = function(){
 	
 	var rnd = ROT.RNG.getPercentage();
 	if(rnd < 8){
-		console.log("new tunneler");
 		var n = new Tunneler(this.x, this.y, this.dir + (rnd < 4 ? 1 : -1), this.width-1, this.maxlife-10, this.map);
 		n.dig();
 	}
 	
 	this.dig();
 };
+
