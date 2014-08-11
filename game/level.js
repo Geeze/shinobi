@@ -42,7 +42,7 @@ TileLevel.prototype = {
 		if(Game.drawfov)
 			if(!(x + "," + y in Game.drawfov))
 				return this.tiles[x + "," + y].unlit;
-		if(Util.distance({x:x,y:y}, Game.player) < 10)
+		if(!this.tiles[x + "," + y].shadow)
 			return this.tiles[x + "," + y].bg;
 		else
 			return this.tiles[x + "," + y].midlit;
@@ -72,31 +72,7 @@ TileLevel.prototype = {
 	},
 
 	load: function () {
-		//SPAWN
-		//SPAWN CREATURES
-		/*
-		var p = Util.findFree(this);
-		var g = null;
-		var i;
-		for (i = 0; i < 1; i++) {
-			p = Util.findFree(this);		
-			g = new Guard(p.x, p.y);		
-			this.actors.add(g);
-			this.guards.add(g);
-		}
 		
-		p = Util.findFree(this);
-		this.lord = new Lord(p.x, p.y);
-		this.actors.add(this.lord);
-		
-		//var lvl = new TileLevel(70,25);
-		//lvl.generate();
-		p = Util.findFree(this);
-		//var e = new levelExit(p.x, p.y, lvl, "stair");
-		//this.exits.add(e);
-		
-		*/
-		//END SPAWN
 		Game.level = this;
 		Game.guards = this.guards;
 		Game.actors = this.actors;
@@ -130,7 +106,34 @@ TileLevel.prototype = {
 	generate: function(){
 		levelGenerator.generate(this);
 	},
-	
+	populate: function(){
+		//SPAWN
+		//SPAWN CREATURES
+		
+		var p = Util.findFree(this);
+		var g = null;
+		var i;
+		for (i = 0; i < 10; i++) {
+			p = Util.findFree(this, 15);		
+			g = new Guard(p.x, p.y);		
+			this.actors.add(g);
+			this.guards.add(g);
+		}
+		
+		p = Util.findFree(this,40);
+		this.lord = new Lord(p.x, p.y);
+		this.actors.add(this.lord);
+		
+		p = Util.findFree(this);
+		
+		//END SPAWN
+	},
+	/*
+		levelExit, creates exits to defined level
+		x,y
+		level: index in Game.world.levels
+		type: border or stair? affects only appearance since this doesnt handle placing
+	*/
 	levelExit: function(x,y,level,type){
 		tile = {
 			x: x,
@@ -142,13 +145,15 @@ TileLevel.prototype = {
 			bg: C_GROUND_LIT,
 			midlit: C_GROUND_MID,
 			unlit: C_GROUND_SHADOW,
+			type: "floor",
 			
 			trigger: function(){
 				Game.level.unload();
-				Game.world.levels[this.level].load();
-				var p = Util.findFree();
+				var p = Util.findFree(Game.world.levels[this.exitTo]);
 				Game.player.x = p.x;
 				Game.player.y = p.y;
+				Game.world.levels[this.exitTo].load();
+				console.log("Level: " + this.exitTo);
 			},
 			exitTo: level,
 			exitType: type
@@ -172,22 +177,6 @@ var outputLevel = function(level){
 				
 		}
 	}
-	/* draw cloud
-	context.beginPath();
-	context.moveTo(170, 80);
-	context.bezierCurveTo(130, 100, 130, 150, 230, 150);
-	context.bezierCurveTo(250, 180, 320, 180, 340, 150);
-	context.bezierCurveTo(420, 150, 420, 120, 390, 100);
-	context.bezierCurveTo(430, 40, 370, 30, 340, 50);
-	context.bezierCurveTo(320, 5, 250, 20, 250, 50);
-	context.bezierCurveTo(200, 5, 150, 20, 170, 80);
-	context.closePath();
-	context.lineWidth = 5;
-	context.fillStyle = '#8ED6FF';
-	context.fill();
-	context.strokeStyle = '#0000ff';
-	context.stroke();
-	*/
 	// save canvas image as data url (png format by default)
 	var dataURL = canvas.toDataURL();
 

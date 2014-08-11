@@ -67,7 +67,7 @@ var Util = {
 				pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 				pX = Math.floor(pX);
 				pY = Math.floor(pY);
-				if(arguments.length < 2){
+				if(arguments.length < 2 || Game.player === null){
 					avoid = 0;
 					dist = 1;
 				} else {

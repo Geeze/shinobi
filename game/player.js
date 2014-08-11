@@ -6,6 +6,8 @@ var Player = function(xx, yy) {
 	this.char = "@";
 	this.color = "#000";
 
+	this.inShadow = false;
+	
 	this.points = 0;
 	this.kills = 0;
 	
@@ -15,7 +17,7 @@ Player.prototype.act = function(){
 	Heat.spread();
 	
 	var dp = Util.cam(this.x,this.y);
-	Game.display.draw(dp.x, dp.y, this.char, this.color, "yellow");
+	Game.display.draw(dp.x, dp.y, this.char, this.color, Game.level.getBg(this.x, this.y));
 	Game.engine.lock();
 	window.addEventListener("keydown", this);
 	window.addEventListener("mousedown", this.mouse);
@@ -23,27 +25,32 @@ Player.prototype.act = function(){
 };
 Player.prototype.handleEvent = function(e){
 	//Define keys.
-	var keyLevel = {};
+	var keyMap = {};
+	var actionKeys = {};
 	//ARROWS
-	keyLevel[38] = 0; //UP
-	keyLevel[33] = 1; //UPRIGHT
-	keyLevel[39] = 2; //And so on
-	keyLevel[34] = 3;
-	keyLevel[40] = 4;
-	keyLevel[35] = 5;
-	keyLevel[37] = 6;
-	keyLevel[36] = 7;
-	//NUMPAD
-	keyLevel[104] = 0; //UP
-	keyLevel[105] = 1; //UPRIGHT
-	keyLevel[102] = 2; //And so on
-	keyLevel[99] = 3;
-	keyLevel[98] = 4;
-	keyLevel[97] = 5;
-	keyLevel[100] = 6;
-	keyLevel[103] = 7;
+	keyMap[38] = 0; //UP
+	keyMap[33] = 1; //UPRIGHT
+	keyMap[39] = 2; //And so on
+	keyMap[34] = 3;
+	keyMap[40] = 4;
+	keyMap[35] = 5;
+	keyMap[37] = 6;
+	keyMap[36] = 7;
 	
-
+	
+	
+	//NUMPAD
+	keyMap[104] = 0; //UP
+	keyMap[105] = 1; //UPRIGHT
+	keyMap[102] = 2; //And so on
+	keyMap[99] = 3;
+	keyMap[98] = 4;
+	keyMap[97] = 5;
+	keyMap[100] = 6;
+	keyMap[103] = 7;
+	
+	actionKeys[190] = "wait"; //Period
+	actionKeys[101] = "wait"; //Numpad 5
 	
 	
 	var code = e.keyCode;
@@ -52,67 +59,80 @@ Player.prototype.handleEvent = function(e){
 		Heat.draw();
 	}
 	
-	if(!(code in keyLevel)){ return;} //Dont do anything if invalid key is pressed.
-
-	var dir = ROT.DIRS[8] [keyLevel[code]];
-	var newX = dir[0] + this.x;
-	var newY = dir[1] + this.y;
-	//var newKey = newX + "," + newY;
-	//var newTile = Game.level.tiles[newKey];
-	
-	//Moving
-	if(Util.walkable(newX, newY)){
-		//This is the part where we kill the lord(batman)
-		if(Game.lord){
-			if(Game.lord.x == newX && Game.lord.y == newY){
-				Console.message("%b{red}You %c{yellow}kill%c{} the %c{blue}Lord%c{}.");
-				Console.message("Victory.");
-				Console.message("%c{grey}You commit sudoku");
-				Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
-				Console.message("Lords slaughtered so far: %c{yellow}" + (++this.kills));
-				window.removeEventListener("keydown", this);
-				window.removeEventListener("mousedown", this.mouse);
-				
-				//New level
-				var lvl = new TileLevel(70,25);
-				lvl.generate();
-				Game.level.unload();
-				lvl.load();
-				var p = Util.findFree(lvl);
-				//Game.player = new Player(p.x, p.y);
-				Game.player.x = p.x;
-				Game.player.y = p.y;
-				lvl.guards.forEach(function(g){
-					p = Util.findFree(lvl);
-					g.startPatrol(p.x, p.y);		//Start patrol
-				});
+	if(!(code in keyMap) && !(code in actionKeys)){ return;} //Dont do anything if invalid key is pressed.
+	if(code in keyMap){
+		var dir = ROT.DIRS[8] [keyMap[code]];
+		var newX = dir[0] + this.x;
+		var newY = dir[1] + this.y;
+		//var newKey = newX + "," + newY;
+		//var newTile = Game.level.tiles[newKey];
 		
-				Heat.init();
-				Game.engine.unlock();
-				return;
+		//Moving
+		if(Util.walkable(newX, newY)){
+			//This is the part where we kill the lord(batman)
+			if(Game.lord){
+				if(Game.lord.x == newX && Game.lord.y == newY){
+					Console.message("%b{red}You %c{yellow}kill%c{} the %c{blue}Lord%c{}.");
+					Console.message("Victory.");
+					Console.message("%c{grey}You commit sudoku");
+					Console.message("Your mission took %c{yellow}" + this.points + " %c{}turns");
+					Console.message("Lords slaughtered so far: %c{yellow}" + (++this.kills));
+					window.removeEventListener("keydown", this);
+					window.removeEventListener("mousedown", this.mouse);
+					
+					//New level
+					var lvl = new TileLevel(70,25);
+					lvl.generate();
+					Game.level.unload();
+					lvl.load();
+					var p = Util.findFree(lvl);
+					//Game.player = new Player(p.x, p.y);
+					Game.player.x = p.x;
+					Game.player.y = p.y;
+					lvl.guards.forEach(function(g){
+						p = Util.findFree(lvl);
+						g.startPatrol(p.x, p.y);		//Start patrol
+					});
+			
+					Heat.init();
+					Game.engine.unlock();
+					return;
+				}
 			}
+			//This is the part where we stun the guards
+			var me = this;
+			Game.guards.forEach(function(g){
+				if(g.x == newX && g.y == newY){
+					g.state = "stunned";
+					g.stuntime = 5;
+					Console.message("You %c{yellow}knock%c{} the %c{green}Guard%c{} down.");
+					newX = me.x;
+					newY = me.y;
+					return;
+				}
+			});
+			var newTile = Game.level.tiles[newX + "," + newY];
+			console.log(newTile);
+			if(newTile.trigger){
+				newTile.trigger();
+			} else {
+				//var old = Game.level.tiles[this.x + "," + this.y];
+				//Game.display.draw(old.x, old.y, old.char, old.color, old.bg);
+				this.x = newX;
+				this.y = newY;
+				this.inShadow = newTile.shadow;
+				Console.message("%c{grey}You sneak around.");//Displayed only if not the most recent message.
+			}
+		} else { return; }
+	
+	}
+	if(code in actionKeys){
+		if(actionKeys[code] == "wait"){
+		
 		}
-		//This is the part where we stun the guards
-		var me = this;
-		Game.guards.forEach(function(g){
-			if(g.x == newX && g.y == newY){
-				g.state = "stunned";
-				g.stuntime = 5;
-				Console.message("You %c{yellow}knock%c{} the %c{green}Guard%c{} down.");
-				newX = me.x;
-				newY = me.y;
-				return;
-			}
-		});
+	}
 	
 	
-		//var old = Game.level.tiles[this.x + "," + this.y];
-		//Game.display.draw(old.x, old.y, old.char, old.color, old.bg);
-		this.x = newX;
-		this.y = newY;
-		Console.message("%c{grey}You sneak around.");//Displayed only if not the most recent message.
-	} else { return; }
-
 	//Render
 	this.draw();
 	
@@ -125,13 +145,14 @@ Player.prototype.handleEvent = function(e){
 Player.prototype.fovCallback = function(x, y, r, visibility){
 
 	var tile, key;
-	//if(!(key in Game.level.tiles)) return;
 	key = x + "," + y;
 	tile = Game.level.tiles[key];
 	var dp = Util.cam(x,y);
-	//alert(x + "," + y);
+	//If no tile dont do anything
 	if(!tile) { return; }
-	if(r < 10)
+	//If tile further in shadow dont do anything
+	//if(r > 10 && tile.shadow) {return;}
+	if(!tile.shadow)
 		Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.bg);
 	else
 		Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.midlit);
@@ -144,7 +165,7 @@ Player.prototype.draw = function(){
 	Game.drawfov = {};
 	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
 	var dp = Util.cam(this.x, this.y);
-	Game.display.draw(dp.x, dp.y, this.char, this.color, "yellow");
+	Game.display.draw(dp.x, dp.y, this.char, this.color, Game.level.getBg(this.x, this.y));
 	
 };
 

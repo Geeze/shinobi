@@ -177,17 +177,19 @@ Guard.prototype.act = function(){
 		
 		//CALCULATE FOV
 		Game.fov.compute90(this.x, this.y, 10, this.facing, function(xx, yy, r, visibility){
-		
+			
 			fove[xx + "," + yy] = true;
-			if(!(Game.player.x == xx & Game.player.y == yy))
-				Heat.remove(xx, yy);
+			
+			//Fix for guards losing you in corners
+			if(Game.player.x != xx)
+				if(Game.player.y != yy)
+					Heat.remove(xx, yy);
 				
 		});
 		
 		//WHEN GUARD SEES PLAYER
-		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible){//Condition for if player is seen. reusable
-			Console.message("You went unnoticed for " + this.time + " turns.");
-			this.time = 0;
+		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible && !(Game.player.inShadow && Util.distance(Game.player, this) > 5)){//Condition for if player is seen. reusable
+			
 			Heat.init();
 			Heat.set(Game.player.x, Game.player.y, 999);
 			if(this.state != "chase") 
@@ -207,6 +209,7 @@ Guard.prototype.startPatrol = function(x, y){
 	var astar = new ROT.Path.AStar(x, y, Util.walkable);
 	var d = false;//checks if path was created. if not go b to sentry
 	var g = this;
+	g.path = [];
 	
 	astar.compute(this.x, this.y, function(x, y){
 		d = true;

@@ -32,13 +32,13 @@ var Game = { //Game container
 			width: this.gameWidth,
 			height: this.gameHeight,
 			fontFamily: "Fixedsys",
-			spacing: 1,
+			spacing: 1
 			
 		});
 		document.body.appendChild(this.display.getContainer());
 		this.scheduler = new ROT.Scheduler.Simple();
 		this.engine = new ROT.Engine(this.scheduler);
-		
+	
 		this.fov = new ROT.FOV.RecursiveShadowcasting(Util.lightPasses);
 		this.world = new worldGraph();
 		this.world.generate();

@@ -9,7 +9,13 @@
 var worldGraph = function(){
 	this.leveld = {};
 	this.leveld[0] = new levelDescriptor(0,[1],"village",null);
-	this.leveld[1] = new levelDescriptor(1,[0],"village",null);
+	this.leveld[1] = new levelDescriptor(1,[2],"village",null);
+	this.leveld[2] = new levelDescriptor(2,[3],"village",null);
+	this.leveld[3] = new levelDescriptor(3,[4],"village",null);
+	this.leveld[4] = new levelDescriptor(4,[5],"village",null);
+	this.leveld[5] = new levelDescriptor(5,[6],"village",null);
+	this.leveld[6] = new levelDescriptor(6,[7],"village",null);
+	this.leveld[7] = new levelDescriptor(7,[],"village",null);
 };
 
 worldGraph.prototype = {
@@ -59,7 +65,7 @@ levelDescriptor.prototype = {
 	a singleton in charge of generating levels
 */
 var levelGenerator = {
-
+	//General generation
 	/*
 		generate(level, desc)
 		level = TileLevel,
@@ -91,7 +97,8 @@ var levelGenerator = {
 				type: value ? "wall" : "floor",
 				bg: value ? "#333" : "#efe",		//Lit tile color
 				unlit: value ? "#000" : "#454",	//Unlit tile color
-				midlit: value ? "#111" : "#898"
+				midlit: value ? "#111" : "#898",
+				shadow: false
 			};
 			level.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
@@ -130,28 +137,73 @@ var levelGenerator = {
 			}
 			//console.log(map[i]);
 		}
-		this.tunnel(map, 0);
 		
+		//Former tunnel()
+		var bsp = new BSP(map.length,map[0].length, 7,7,22,22);
+		bsp.shortenEdges();
+		var self = this;
+		
+		bsp.edges.forEach(function(e){
+			self.placeRoad(map, e.x1,e.y1,e.x2,e.y2, e.width);
+		});//*/
+		
+		bsp.nodes.forEach(function(n){
+			var r = nodeToRect(n);
+			if(r.w < 15 && r.h < 15)
+				self.placeHut(map, r.x, r.y, r.w, r.h);
+		});
 		
 		
 		var digCallback = function (xx, yy, value) {
-			var val;
+			var val, tile;
 			if(value == 1) val = true;
 			else val = false;
+			if(value === 0 || value == 1){
+				tile = {
+					x: xx,
+					y: yy,
+					char: " ",
+					color: val ? "#333" : "#aaa",		//Color of character if tile has any.
+					walkable: val ? false : true, 
+					blockslos: val ? true : false,
+					type: val ? "wall" : "floor",
+					bg: val ? "#333" : "#efe",		//Lit tile color
+					unlit: val ? "#100" : "#454",	//Unlit tile color
+					midlit: val ? "#111" : "#898",
+					shadow: false
+				};
+			}
+			if(value == 2){ //Windows
+				tile = {
+					x: xx,
+					y: yy,
+					char: "\u2610",
+					color: "#000",		//Color of character if tile has any.
+					walkable: false, 
+					blockslos: false,
+					type: "window",
+					bg: "#66f",		//Lit tile color
+					unlit: "#100",	//Unlit tile color
+					midlit: "#66a",
+					shadow: false
+				};
+			}
 			
-			var tile = {
-				x: xx,
-				y: yy,
-				char: " ",
-				color: val ? "#333" : "#aaa",		//Color of character if tile has any.
-				walkable: val ? false : true, 
-				blockslos: val ? true : false,
-				type: val ? "wall" : "floor",
-				bg: val ? "#333" : "#efe",		//Lit tile color
-				unlit: val ? "#100" : "#454",	//Unlit tile color
-				midlit: val ? "#111" : "#898"
-			};
-			
+			if(value == 3){//Indoors
+				tile = {
+					x: xx,
+					y: yy,
+					char: " ",
+					color: "#aaa",		//Color of character if tile has any.
+					walkable: true, 
+					blockslos: false,
+					type: "floor",
+					bg: "#efe",		//Lit tile color
+					unlit: "#100",	//Unlit tile color
+					midlit: "#898",
+					shadow: true
+				};
+			}
 			level.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
 		
@@ -162,31 +214,31 @@ var levelGenerator = {
 			}
 		}
 		var exit = desc.exits[0];
+		this.placeExits(level,desc);
+		this.placeShadows(level);
+		level.populate();
 		//var p = Util.findFree(level);
 		//level.levelExit(p.x,p.y,exit,"stair");
 	},
-	/*
-		my attempt/implementation of tunneling algorithm
-	*/
-	tunnel: function(map, value){
-		var bsp = new BSP(map.length,map[0].length, 10,7,25,20);
-		bsp.shortenEdges();
-		var self = this;
-		bsp.edges.forEach(function(e){
-			self.createRoad(map, e.x1,e.y1,e.x2,e.y2, e.width);
-		});
-	},
 	
 	
+	//Subroutines, operate on maps. arrays [][] of int "enums"
 	placeHut: function(map, x, y, w, h){
 		for (var ii = 0; ii < w; ii++){
 			for (var jj = 0; jj < h; jj++){
-				if(ii === 0 || jj === 0 || ii == w-1 || jj == h-1)
-					map[ii + x][jj + y] = 1;
+				if(ii + x > 0 && jj + y > 0 && ii + x < map.length && jj + y < map[0].length){
+					if(ii === 0 || jj === 0 || ii == w-1 || jj == h-1){
+						if((ii > w/3 && ii < 2*w/3) || (jj > h/3 && jj < 2*h/3))
+							map[ii + x][jj + y] = 2;
+						else
+							map[ii + x][jj + y] = 1;
+					} else
+						map[ii + x][jj + y] = 3;
+				}
 			}
 		}
 	},
-	createRoad: function(map,x1,y1,x2,y2,width){
+	placeRoad: function(map,x1,y1,x2,y2,width){
 		//Lets assume road is never bended
 		//map is [][] of integers
 		var i, j, upper, lower;
@@ -215,6 +267,42 @@ var levelGenerator = {
 		
 	
 		
+	},
+	//Subroutines, operate on tilelevel data
+	placeExits: function(level, desc){
+		var exits = desc.exits;
+		if(exits.length === 0) return;
+		var tile;
+		for(var i = 0; i < level.h; i++){
+			tile = level.tiles[(level.w-1) + "," + i];
+			if(tile.type == "floor"){
+				level.levelExit(tile.x,tile.y,exits[0],"border");
+			}
+		}
+		
+	},
+	placeShadows: function(level){
+		var tile,comparedTile;
+		
+		//lightPasses copied from util.js
+		var lightPasses = function(x, y){
+			if(!Util.inBounds(x, y, level)) return false;
+				var key = x + "," + y;
+			if(!(key in level.tiles)) return false;
+				var tile = level.tiles[key];
+			if (tile.type == "floor") { return true; }
+			else { return false; }
+		};
+		//Go through every tile and check if sun direction casts shadow
+		var key;
+		for(key in level.tiles){
+			tile = level.tiles[key];
+			if(tile.type == "floor"){
+				if(!lightPasses(tile.x + 1, tile.y - 1)){
+					tile.shadow = true;
+				}
+			}
+		}
 	}
 };
 
@@ -243,14 +331,13 @@ var BSP = function(w,h,minx,miny,maxx, maxy){
 	this.root = new BspNode(this,top,bottom,left,right, 1);
 	this.newNodes.add(this.root);
 	var self = this;
-
+	//Start the nuclear reaction!!!
 	this.split(this.root);
 };
 BSP.prototype = {
 	split: function(node){
-		node.split = true;
+		
 		var direction = (node.orientation + 1)%2;//0 for horizontal 1 for vertical
-		console.log(direction);
 		var newEdge;
 		var x1,x2,y1,y2;
 			y1 = node.top.y1;
@@ -295,6 +382,9 @@ BSP.prototype = {
 				//Recursive
 				this.split(upnode);
 				this.split(downnode);
+			} else {
+				this.nodes.add(node);
+				console.log(nodeToRect(node));
 			}
 		}
 		
@@ -329,6 +419,8 @@ BSP.prototype = {
 				this.edges.add(newEdge);
 				this.split(leftnode);
 				this.split(rightnode);
+			} else {
+				this.nodes.add(node);
 			}
 		}//END VERTICAL
 		
@@ -345,7 +437,10 @@ BSP.prototype = {
 			border = null;
 			edge.neighbors.forEach(function(n){
 				if(n.width === 0){//check if connected to border
-					if(border !== null) border = null; //if connected to both border dont do anything
+					if(border !== null){ 
+						border = null; //if connected to both border dont do anything
+						edge.width = 7;
+					}
 					else border = n;
 				} else {
 					//Get coordinates for edges.
@@ -357,7 +452,6 @@ BSP.prototype = {
 			});
 			//If not on border dont shorten.
 			if(border === null){
-				console.log("Edge not shortened");
 				return;
 			} else {
 				//Adjust new ends for edges
@@ -365,7 +459,6 @@ BSP.prototype = {
 				if(border == self.root.right) edge.x2 = maxx;
 				if(border == self.root.top) edge.y1 = miny;
 				if(border == self.root.bottom) edge.y2 = maxy;
-				console.log("Edge shortened");
 			}
 		});
 	}
@@ -443,48 +536,29 @@ Rectangle.prototype = {
 		}
 	}
 };
-
-/*
-	Point
-	helper
-*/
-var Point = function(x, y){
-	this.x = x;
-	this.y = y;
-};
-
-var Tunneler = function(x,y,dir,width,life,map) {
-		this.x = x;
-		this.y = y;
-		this.dir = (dir%4); //0,1,2,3 up right down left
-		this.width = width; //assume positive
-		this.life = life;
-		this.maxlife = life;
-		this.map = map;
-};
-Tunneler.prototype.dig = function(){
-	if(!(this.width > 0 && this.life > 0 )) return;
-	for (var i = this.x; i < this.x+this.width; i++){
-		for (var j = this.y; j < this.y+this.width; j++){
-			if(i > 0 && j > 0 && i < this.map.length && j < this.map[0].length){
-				this.map[i][j] = 0;
-			} else {
+//Create a rectangular area from node. sized by roads.
+var nodeToRect = function(node){
+	var x1,x2,y1,y2;
+	//Get coords from edges.
+	x1 = node.left.x1;
+	x2 = node.right.x1;
+	y1 = node.top.y1;
+	y2 = node.bottom.y1;
+	//make it smaller according to roadwidths.
+	/*
+	x1 = x1 + 1 + Math.floor(node.left.width/2 + 0.1);
+	x2 = x2 - 1 - Math.floor(node.right.width/2 - 0.1);
+	y1 = y1 + 1 + Math.floor(node.top.width/2 - 0.1);
+	y2 = y2 - 1 - Math.floor(node.bottom.width/2 + 0.1);
+	*/
+	y2 = y2 - Math.floor(node.bottom.width/2 - 0.1);
+	y1 = y1 + 1 + Math.floor(node.top.width/2 + 0.1);
+	x2 = x2 - Math.floor(node.right.width/2 - 0.1);
+	x1 = x1 + 1 + Math.floor(node.left.width/2 + 0.1);
 				
-			}
-		}
-	}
-	this.life--;
-	if(this.dir === 0) this.y -= 1;
-	if(this.dir == 1) this.x += 1;
-	if(this.dir == 2) this.y += 1;
-	if(this.dir == 3) this.x -= 1;
 	
-	var rnd = ROT.RNG.getPercentage();
-	if(rnd < 8){
-		var n = new Tunneler(this.x, this.y, this.dir + (rnd < 4 ? 1 : -1), this.width-1, this.maxlife-10, this.map);
-		n.dig();
-	}
-	
-	this.dig();
+	//Make the rect
+	return new Rectangle(x1,y1,x2-x1,y2-y1);
 };
+
 
