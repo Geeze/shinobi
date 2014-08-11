@@ -86,9 +86,10 @@ Lord.prototype.act = function(){
 	console.log(this.x + "," + this.y);
 	//Util.debugfov();
 	if(this.x + "," + this.y in Game.drawfov) {
+		var dp = Util.cam(this.x, this.y);
 		Game.display.draw(
-			this.x,
-			this.y,
+			dp.x,
+			dp.y,
 			this.char,
 			this.color,
 			this.bg);
@@ -99,8 +100,8 @@ Lord.prototype.act = function(){
 		for(i = -2; i < 3; i++){
 			dir = ROT.DIRS[8][(this.facing + i + 8) % 8];
 			Game.display.draw(
-				this.x + dir[0],
-				this.y + dir[1],
+				dp.x + dir[0],
+				dp.y + dir[1],
 				this._facinglines[(this.facing + i + 8)%8],
 				this.bg,
 				Game.level.getBg(this.x + dir[0], this.y + dir[1]));

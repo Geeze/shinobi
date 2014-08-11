@@ -9,12 +9,12 @@ var Heat = {
 	init: function(){
 		this.oldNodes = new Set(null, this._equals, this._hash);
 		this.freshNodes = new Set(null, this._equals, this._hash);
-		heatTime = 0;
+		this.time = 0;
 	},
 	//Add node in specified coordinates. Heatlevel spreads from there max. time nodes
 	set: function(x,y,time){
 		this.freshNodes.add([x,y]);
-		heatTime = time;
+		this.time = time;
 	},
 	
 	neighbors: function(node){
@@ -36,7 +36,7 @@ var Heat = {
 	//Spreads the heat one iteration
 	spread: function(){
 		//Dont spread if time = 0
-		if(heatTime < 1) return;
+		if(this.time < 1) return;
 		me = this;
 		//Get next iteration of nodes
 		var newNodes = new Set(null, this._equals, this._hash);
@@ -47,7 +47,7 @@ var Heat = {
 		this.oldNodes.addEach(this.freshNodes);
 		this.freshNodes = newNodes.difference(this.oldNodes);
 		
-		heatTime -= 1;
+		this.time -= 1;
 	},
 	//Returns possible neighbors for each node
 	
@@ -55,10 +55,12 @@ var Heat = {
 	//Debugging. Draws the heatlevel over game. Atm called by pressing 'H'
 	draw: function(){
 		this.oldNodes.forEach(function(node){
-			Game.display.draw(node[0], node[1], ".", "#000", "#fb0");
+			var point = Util.cam(node[0],node[1]);
+			Game.display.draw(point.x, point.y, ".", "#000", "#fb0");
 		});
 		this.freshNodes.forEach(function(node){
-			Game.display.draw(node[0], node[1], ".", "#000", "#bf0");
+			var point = Util.cam(node[0],node[1]);
+			Game.display.draw(point.x, point.y, ".", "#000", "#bf0");
 		});
 	},
 

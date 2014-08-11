@@ -6,25 +6,48 @@
 */
 
 var Util = {
+
+	/*
+		inBounds(): because im lazy(?)
+	*/
+	inBounds: function(x, y, level){
+		if(arguments.length == 3)
+			if(x < 0 || y < 0 || x >= level.w || y >= level.h)
+				return false;
+			else
+				return true;
+		else
+			if(x < 0 || y < 0 || x >= Game.level.w || y >= Game.level.h)
+				return false;
+			else
+				return true;
+
+	},
+
 	/*
 		Util.lightPasses(): used for Field of View
 	*/
 	lightPasses: function(x, y){
+		if(!Util.inBounds(x, y)) return false;
 		var key = x + "," + y;
 		if(!(key in Game.level.tiles)) return false;
 		var tile = Game.level.tiles[key];
 		if (!tile.blockslos) { return true; }
 		else { return false; }
 	},
+	/*
+		Util.walkable(): should be used for pathfinding
+	*/
 	walkable: function(x, y){
+		if(!Util.inBounds(x, y)) return false;
 		var key = x + "," + y;
 		if(!(key in Game.level.tiles)) return false;
 		var tile = Game.level.tiles[key];
 		if (tile.walkable) { return true; }
 		else { return false; }
 	},
-
-	//Callback for PATHFINDING, not needed. YET! When smoke is introduced.
+	
+	
 
 	/*
 		Finds a random free point on the level
@@ -38,13 +61,13 @@ var Util = {
 		}
 		
 		var pX, pY;
-		
+		console.log("Stuck!");
 			do {
 				pX = ROT.RNG.getUniform() * (l.w - 2) + 1;
 				pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 				pX = Math.floor(pX);
 				pY = Math.floor(pY);
-				if(arguments.length < 2){
+				if(arguments.length < 2 || Game.player === null){
 					avoid = 0;
 					dist = 1;
 				} else {
@@ -52,7 +75,7 @@ var Util = {
 				}
 				
 			} while (l.tiles[pX + "," + pY].walkable === false || dist < avoid);
-		 
+			console.log("No MORE");
 		return {x: pX, y: pY};
 		
 	},
@@ -102,6 +125,17 @@ var Util = {
 			}
 		}
 		
+	},
+	/*
+		cam= returns point translated by camera position
+	*/
+	cam: function(x,y){
+		if(!Game.player){
+			return {x:x, y:y};
+		} else {
+			var p = Game.player;
+			return {x: x - p.x + Math.floor(Game.gameWidth/2), y: y - p.y + Math.floor(Game.gameHeight/2)};
+		}
 	},
 	
 	//FOR [x,y] pairs
