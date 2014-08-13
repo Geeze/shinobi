@@ -58,7 +58,6 @@ Lord.prototype.act = function(){
 		var lord = this;
 		astar.compute(this.x, this.y, function(x, y){
 			lord.path.push([x,y]);
-			//DEBUG: Game.display.draw(x,y,"x");
 		});
 		if(this.path.length === 0){
 			astar = new ROT.Path.AStar(g.x, g.y, escapeRoute);
@@ -83,8 +82,12 @@ Lord.prototype.act = function(){
 		}
 	}
 	
-	console.log(this.x + "," + this.y);
-	//Util.debugfov();
+
+	this.draw();
+
+	
+};
+Lord.prototype.draw = function(){
 	if(this.x + "," + this.y in Game.drawfov) {
 		var dp = Util.cam(this.x, this.y);
 		Game.display.draw(
@@ -116,8 +119,6 @@ Lord.prototype.act = function(){
 		this._visible = false;
 		console.log("unseen");
 	}
-
-	
 };
 // CUSTOM PATHFINDER HEURISTIC(?) that avoids the player. simple.
 var escapeRoute = function(x, y){
