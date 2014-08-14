@@ -176,7 +176,7 @@ Guard.prototype.act = function(){
 		var fove = this.fov; //allows fov to be used in delegate(?)
 		
 		//CALCULATE FOV
-		console.log("Heat removal");
+		
 		Game.fov.compute90(this.x, this.y, 10, this.facing, function(xx, yy, r, visibility){
 			
 			fove[xx + "," + yy] = true;
@@ -187,7 +187,7 @@ Guard.prototype.act = function(){
 				
 		});
 		Heat.remove(this.x, this.y);
-		console.log("Sees");
+		
 		//WHEN GUARD SEES PLAYER
 		if(this.fov[Game.player.x + "," + Game.player.y] && this._visible && !(Game.player.inShadow && Util.distance(Game.player, this) > 5)){//Condition for if player is seen. reusable
 			

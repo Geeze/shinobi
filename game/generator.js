@@ -343,8 +343,9 @@ var levelGenerator = {
 				level.levelExit(tile.x, tile.y, exits[0], "border");
 			}
 		}
-
 	},
+	
+	//bakes the shadows in the level
 	placeShadows : function (level) {
 		var tile,
 		comparedTile;

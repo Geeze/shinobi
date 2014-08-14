@@ -49,7 +49,7 @@ Player.prototype.handleEvent = function (e) {
 
 	actionKeys[190] = "wait"; //Period
 	actionKeys[101] = "wait"; //Numpad 5
-
+	actionKeys[83] = "smoke";
 
 	var code = e.keyCode;
 
@@ -130,80 +130,84 @@ Player.prototype.handleEvent = function (e) {
 	}
 	if (code in actionKeys) {
 		if (actionKeys[code] == "wait") {}
-	}
+		if (actionKeys[code] == "smoke") {
+			var smoke = new SmokeBomb(this.x, this.y);
+			console.log("Smoke at "+ this.x + "," + this.y);
+			}
+		}
 
-	//Render
-	this.draw();
+		//Render
+		this.draw();
 
-	//On to next turn
-	window.removeEventListener("keydown", this);
-	Game.engine.unlock();
+		//On to next turn
+		window.removeEventListener("keydown", this);
+		Game.engine.unlock();
 
-};
+	};
 
-Player.prototype.fovCallback = function (x, y, r, visibility) {
+	Player.prototype.fovCallback = function (x, y, r, visibility) {
 
-	var tile,
-	key;
-	key = x + "," + y;
-	tile = Game.level.tiles[key];
-	var dp = Util.cam(x, y);
-	//If no tile dont do anything
-	if (!tile) {
-		return;
-	}
-	//If tile further in shadow dont do anything
-	//if(r > 10 && tile.shadow) {return;}
-	if (!tile.shadow)
-		Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.bg);
-	else
-		Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.midlit);
-	Game.drawfov[x + "," + y] = true;
+		var tile,
+		key;
+		key = x + "," + y;
+		tile = Game.level.tiles[key];
+		var dp = Util.cam(x, y);
+		//If no tile dont do anything
+		if (!tile) {
+			return;
+		}
+		//If tile further in shadow dont do anything
+		//if(r > 10 && tile.shadow) {return;}
+		if (!tile.shadow)
+			Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.bg);
+		else
+			Game.display.draw(dp.x, dp.y, tile.char, tile.color, tile.midlit);
+		Game.drawfov[x + "," + y] = true;
 
-};
+	};
 
-Player.prototype.draw = function () {
-	Game.level.draw();
-	Game.drawfov = {};
-	Game.fov.compute(this.x, this.y, 20, this.fovCallback);
-	var dp = Util.cam(this.x, this.y);
-	Game.display.draw(dp.x, dp.y, this.char, this.color, Game.level.getBg(this.x, this.y));
-};
+	Player.prototype.draw = function () {
+		Game.level.draw();
+		Game.drawfov = {};
+		Game.fov.compute(this.x, this.y, 20, this.fovCallback);
+		var dp = Util.cam(this.x, this.y);
+		Game.display.draw(dp.x, dp.y, this.char, this.color, Game.level.getBg(this.x, this.y));
+	};
 
-Player.prototype.mouse = function (e) {
-	var p = Game.display.eventToPosition(e);
-	if (p == [-1, -1])
-		return;
-	var x,
-	y;
-	x = p[0];
-	y = p[1];
-	var b = {};
-	b.keyCode = 0;
-	//COORD to KEYCODE
-	if (x < 25) {
-		if (y < 10)
-			b.keyCode = 36;
-		if (y > 15)
-			b.keyCode = 35;
-		if (y > 10 && y < 15)
-			b.keyCode = 37;
-	} else if (x > 45) {
-		if (y < 10)
-			b.keyCode = 33;
-		if (y > 15)
-			b.keyCode = 34;
-		if (y > 10 && y < 15)
-			b.keyCode = 39;
-	} else {
-		if (y < 10)
-			b.keyCode = 38;
-		if (y > 15)
-			b.keyCode = 40;
-		if (y > 10 && y < 15)
-			b.keyCode = 0;
-	}
-	//alert(b); alert(b.code);
-	Game.player.handleEvent(b);
+	Player.prototype.mouse = function (e) {
+		var p = Game.display.eventToPosition(e);
+		if (p == [-1, -1])
+			return;
+		var x,
+		y;
+		x = p[0];
+		y = p[1];
+		var b = {};
+		b.keyCode = 0;
+		//COORD to KEYCODE
+		if (x < 25) {
+			if (y < 10)
+				b.keyCode = 36;
+			if (y > 15)
+				b.keyCode = 35;
+			if (y > 10 && y < 15)
+				b.keyCode = 37;
+		} else if (x > 45) {
+			if (y < 10)
+				b.keyCode = 33;
+			if (y > 15)
+				b.keyCode = 34;
+			if (y > 10 && y < 15)
+				b.keyCode = 39;
+		} else {
+			if (y < 10)
+				b.keyCode = 38;
+			if (y > 15)
+				b.keyCode = 40;
+			if (y > 10 && y < 15)
+				b.keyCode = 0;
+		}
+		//alert(b); alert(b.code);
+		Game.player.handleEvent(b);
 
-};
+	};

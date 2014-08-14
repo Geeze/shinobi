@@ -34,7 +34,7 @@ var Util = {
 		if (!(key in Game.level.tiles))
 			return false;
 		var tile = Game.level.tiles[key];
-		if (!tile.blockslos) {
+		if (!tile.blockslos && !tile.smoked) {
 			return true;
 		} else {
 			return false;
@@ -70,7 +70,7 @@ var Util = {
 
 		var pX,
 		pY;
-		console.log("Stuck!");
+		
 		do {
 			pX = ROT.RNG.getUniform() * (l.w - 2) + 1;
 			pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
@@ -87,7 +87,7 @@ var Util = {
 			}
 
 		} while (l.tiles[pX + "," + pY].walkable === false || dist < avoid);
-		console.log("No MORE");
+		
 		return {
 			x : pX,
 			y : pY

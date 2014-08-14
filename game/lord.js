@@ -117,7 +117,6 @@ Lord.prototype.draw = function(){
 		this._visible = true;
 	} else {
 		this._visible = false;
-		console.log("unseen");
 	}
 };
 // CUSTOM PATHFINDER HEURISTIC(?) that avoids the player. simple.
