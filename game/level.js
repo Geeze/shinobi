@@ -106,26 +106,26 @@ TileLevel.prototype = {
 	generate: function(){
 		levelGenerator.generate(this);
 	},
-	populate: function(){
+	populate: function(lord,guards){
 		//SPAWN
 		//SPAWN CREATURES
 		
 		var p = Util.findFree(this);
 		var g = null;
 		var i;
-		for (i = 0; i < 10; i++) {
+		for (i = 0; i < guards; i++) {
 			p = Util.findFree(this, 15);		
 			g = new Guard(p.x, p.y);		
 			this.actors.add(g);
 			this.guards.add(g);
 		}
-		
-		p = Util.findFree(this,40);
-		this.lord = new Lord(p.x, p.y);
-		this.actors.add(this.lord);
-		
+		if(lord){
+			p = Util.findFree(this,40);
+			this.lord = new Lord(p.x, p.y);
+			this.actors.add(this.lord);
+		}
 		p = Util.findFree(this);
-		
+		console.log("guards: " + guards + " lord " + lord);
 		//END SPAWN
 	},
 	/*
@@ -149,9 +149,10 @@ TileLevel.prototype = {
 			
 			trigger: function(){
 				Game.level.unload();
-				var p = Util.findFree(Game.world.levels[this.exitTo]);
-				Game.player.x = p.x;
-				Game.player.y = p.y;
+				//Get start position for player
+				var newLevel = Game.world.levels[this.exitTo];
+				Game.player.x = newLevel.startX;
+				Game.player.y = newLevel.startY;
 				Game.world.levels[this.exitTo].load();
 				console.log("Level: " + this.exitTo);
 			},

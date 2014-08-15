@@ -226,8 +226,12 @@ var levelGenerator = {
 		}
 		var exit = desc.exits[0];
 		this.placeExits(level, desc);
+		this.placeStart(level, bsp);
 		this.placeShadows(level);
-		level.populate();
+		if(desc.place < 6)
+			level.populate(false, 7 + desc.place);
+		else
+			level.populate(true,20);
 		//var p = Util.findFree(level);
 		//level.levelExit(p.x,p.y,exit,"stair");
 	},
@@ -344,7 +348,10 @@ var levelGenerator = {
 			}
 		}
 	},
-	
+	placeStart : function (level,bsp){
+		level.startX = 2;
+		level.startY = bsp.mainRoad.y1;
+	},
 	//bakes the shadows in the level
 	placeShadows : function (level) {
 		var tile,
@@ -520,8 +527,9 @@ BSP.prototype = {
 			edge.neighbors.forEach(function (n) {
 				if (n.width === 0) { //check if connected to border
 					if (border !== null) {
-						border = null; //if connected to both border dont do anything
+						border = null; //if connected to both borders dont do anything
 						edge.width = 7;
+						self.mainRoad = edge;
 					} else
 						border = n;
 				} else {

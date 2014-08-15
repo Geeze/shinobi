@@ -1,5 +1,6 @@
 
 Game.init();
+Inventory._init();
 Console._init();
 
 Game.engine.start();

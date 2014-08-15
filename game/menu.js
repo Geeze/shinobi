@@ -65,8 +65,9 @@ MainMenu.prototype = {
 		var lvl = Game.world.levels[0];
 		console.log(lvl);
 
-		var p = Util.findFree(lvl);
-		Game.player = new Player(p.x, p.y);
+		var px = lvl.startX;
+		var py = lvl.startY;
+		Game.player = new Player(px, py);
 
 		lvl.load();
 
