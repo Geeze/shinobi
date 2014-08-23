@@ -65,7 +65,7 @@ var Game = { //Game container
 //CONSOLE well selfexplanatory
 var Console = {
 
-	width: 70,
+	width: 76,
 	height: 5,
 	display: null,
 	messages: [null, null, null, null, null],
