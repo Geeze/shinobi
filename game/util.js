@@ -70,7 +70,7 @@ var Util = {
 
 		var pX,
 		pY;
-		
+
 		do {
 			pX = ROT.RNG.getUniform() * (l.w - 2) + 1;
 			pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
@@ -87,7 +87,7 @@ var Util = {
 			}
 
 		} while (l.tiles[pX + "," + pY].walkable === false || dist < avoid);
-		
+
 		return {
 			x : pX,
 			y : pY
@@ -157,7 +157,7 @@ var Util = {
 	},
 	/*
 	 * randomInRange, returns random integer between a and b, quite likely never returns b.
-	 * 
+	 *
 	 */
 	randomInRange : function (a, b, pad) {
 		var x = ROT.RNG.getUniform();
@@ -181,7 +181,9 @@ var Util = {
 			};
 		}
 	},
-
+	randInt : function(a, b) {
+		return a + Math.floor(Math.random() * (++b - a));
+	},
 	//FOR [x,y] pairs
 	//this._equals & this._hash, delegates(?) for the sets
 	_equals : function (a, b) {

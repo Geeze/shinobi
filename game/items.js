@@ -58,7 +58,7 @@ var Inventory = {
 		for (i in this.items) {
 			var y = 4 + 3 * i;
 			var item = this.items[i];
-			this.display.draw(0, y, ++i, "#000", "#bbf");
+			this.display.draw(0, y, ++i, C_WALL_SHADOW, "#bbf");
 			this.display.drawText(2, y, item.name);
 		}
 	}
@@ -80,7 +80,7 @@ var SmokeBomb = function (x, y) {
 	this.time = 6;
 	this.x = x;
 	this.y = y;
-	this.color = "#000";
+	this.color = C_WALL_SHADOW;
 	this.char = "s";
 	this.bg = "#555";
 	Game.scheduler.add(this, true);

@@ -56,11 +56,11 @@ var Heat = {
 	draw: function(){
 		this.oldNodes.forEach(function(node){
 			var point = Util.cam(node[0],node[1]);
-			Game.display.draw(point.x, point.y, ".", "#000", "#fb0");
+			Game.display.draw(point.x, point.y, ".", C_WALL_SHADOW, "#fb0");
 		});
 		this.freshNodes.forEach(function(node){
 			var point = Util.cam(node[0],node[1]);
-			Game.display.draw(point.x, point.y, ".", "#000", "#bf0");
+			Game.display.draw(point.x, point.y, ".", C_WALL_SHADOW, "#bf0");
 		});
 	},
 

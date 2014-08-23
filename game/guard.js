@@ -7,7 +7,7 @@ var Guard = function(xx, yy) {
 	this.y = yy;
 	//Display
 	this.char = "G";
-	this.color = "#000";
+	this.color = C_WALL_SHADOW;
 	this.bg = "#393";
 	//AI
 	this.state = "sentry"; //sentry, patrol, search, chase

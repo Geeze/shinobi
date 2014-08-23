@@ -4,7 +4,7 @@ var Player = function (xx, yy) {
 	this.x = xx;
 	this.y = yy;
 	this.char = "@";
-	this.color = "#000";
+	this.color = C_WALL_SHADOW;
 
 	this.inShadow = false;
 

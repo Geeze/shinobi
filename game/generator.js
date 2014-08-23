@@ -5,6 +5,7 @@ var T_FLOOR = 0;
 var T_WALL = 1;
 var T_WINDOW = 2;
 var T_INDOORS = 3;
+var T_DOOR = 4;
 /*
 worldGraph
 a class for handling the overall map structure.
@@ -96,13 +97,13 @@ var levelGenerator = {
 				x : xx,
 				y : yy,
 				char : " ",
-				color : value ? "#333" : "#aaa", //Color of character if tile has any.
+				color : value ? C_WALL_LIT : "#aaa", //Color of character if tile has any.
 				walkable : value ? false : true,
 				blockslos : value ? true : false,
 				type : value ? "wall" : "floor",
-				bg : value ? "#333" : "#efe", //Lit tile color
-				unlit : value ? "#000" : "#454", //Unlit tile color
-				midlit : value ? "#111" : "#898",
+				bg : value ? C_WALL_LIT : C_GROUND_LIT, //Lit tile color
+				unlit : value ? C_WALL_SHADOW : C_GROUND_SHADOW, //Unlit tile color
+				midlit : value ? C_WALL_MID : C_GROUND_MID,
 				shadow : false
 			};
 			level.tiles[xx + "," + yy] = tile; //assign tile to array
@@ -113,7 +114,6 @@ var levelGenerator = {
 		if (arguments.length > 0) {
 			var exit = desc.exits[0];
 			var p = Util.findFree(level);
-			
 
 		}
 	},
@@ -123,7 +123,7 @@ var levelGenerator = {
 	generateVillage : function (level, desc) {
 
 		var w,
-			h;
+		h;
 		w = level.w;
 		h = level.h;
 
@@ -140,7 +140,7 @@ var levelGenerator = {
 			for (var j = 0; j < h; j++) {
 				map[i][j] = 1; //init the array with floor.
 			}
-			
+
 		}
 
 		//Former tunnel()
@@ -152,14 +152,45 @@ var levelGenerator = {
 			self.placeRoad(map, e.x1, e.y1, e.x2, e.y2, e.width);
 		});
 		//Do stuff to areas
+		console.log("RECT");
 		bsp.nodes.forEach(function (n) {
 			//If area next to level border dont do anything
-			if(n.bottom.width === 0 || n.right.width === 0 || n.left.width === 0 || n.top.width === 0) return;
+			if (n.bottom.width === 0 || n.right.width === 0 || n.left.width === 0 || n.top.width === 0)
+				return;
 			var r = nodeToRect(n);
-			if (r.w < 15 && r.h < 15)
-				self.placeHut(map, r.x, r.y, r.w, r.h);
-			if (r.w > 12  && r.h > 12)
-				self.placeAlley(map, r, ROT.RNG.getPercentage() % 2);
+			try {
+				//Prefabs
+				if (r.w > 12 && r.h > 12) {
+
+					self.placePrefab(map, r.x, r.y, rotatedTemplate(Templates.housing, r.w, r.h, Util.randInt(0, 3), false));
+					throw "Template";
+
+				}
+				if ((r.w == 10 || r.w == 9) && (r.h == 10 || r.h == 9)) {
+					self.placePrefab(map, r.x, r.y, TemplateNobleHouse);
+					throw "Template";
+				}
+
+				//Generic options
+				if (r.w < 15 && r.h < 15) {
+					self.placeHut(map, r.x, r.y, r.w, r.h);
+					throw "Hut";
+				}
+				if (r.w > 15 && r.h > 15) {
+					if (ROT.RNG.getPercentage() % 2) {
+						self.placeAlley(map, r, ROT.RNG.getPercentage() % 2);
+						throw "Alley";
+					} else {
+						self.placeApartments(map, r);
+						throw "Apartments";
+					}
+
+				}
+
+			} catch (e) {
+				//Do nothing
+
+			}
 		});
 
 		var digCallback = function (xx, yy, value) {
@@ -174,13 +205,13 @@ var levelGenerator = {
 					x : xx,
 					y : yy,
 					char : " ",
-					color : val ? "#333" : "#aaa", //Color of character if tile has any.
+					color : val ? C_WALL_LIT : "#aaa", //Color of character if tile has any.
 					walkable : val ? false : true,
 					blockslos : val ? true : false,
 					type : val ? "wall" : "floor",
-					bg : val ? "#333" : "#efe", //Lit tile color
-					unlit : val ? "#100" : "#454", //Unlit tile color
-					midlit : val ? "#111" : "#898",
+					bg : val ? C_WALL_LIT : C_GROUND_LIT, //Lit tile color
+					unlit : val ? "#100" : C_GROUND_SHADOW, //Unlit tile color
+					midlit : val ? C_WALL_MID : C_GROUND_MID,
 					shadow : false
 				};
 			}
@@ -189,7 +220,7 @@ var levelGenerator = {
 					x : xx,
 					y : yy,
 					char : "\u2610",
-					color : "#000", //Color of character if tile has any.
+					color : C_WALL_SHADOW, //Color of character if tile has any.
 					walkable : false,
 					blockslos : false,
 					type : "window",
@@ -209,12 +240,28 @@ var levelGenerator = {
 					walkable : true,
 					blockslos : false,
 					type : "floor",
-					bg : "#efe", //Lit tile color
+					bg : C_GROUND_LIT, //Lit tile color
 					unlit : "#100", //Unlit tile color
-					midlit : "#898",
+					midlit : C_GROUND_MID,
 					shadow : true
 				};
 			}
+			if (value == T_DOOR) {
+				tile = {
+					x : xx,
+					y : yy,
+					char : "+",
+					color : "#000", //Color of character if tile has any.
+					walkable : true,
+					blockslos : true,
+					type : "floor",
+					bg : C_GROUND_LIT, //Lit tile color
+					unlit : C_WALL_SHADOW, //Unlit tile color
+					midlit : C_GROUND_MID,
+					shadow : true
+				};
+			}
+			if(!tile) throw xx + "," + yy + "," + value;
 			level.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
 
@@ -228,10 +275,10 @@ var levelGenerator = {
 		this.placeExits(level, desc);
 		this.placeStart(level, bsp);
 		this.placeShadows(level);
-		if(desc.place < 6)
+		if (desc.place < 6)
 			level.populate(false, 7 + desc.place);
 		else
-			level.populate(true,20);
+			level.populate(true, 20);
 		//var p = Util.findFree(level);
 		//level.levelExit(p.x,p.y,exit,"stair");
 	},
@@ -290,11 +337,11 @@ var levelGenerator = {
 	 */
 	placeAlley : function (map, rect, horizontal) {
 		var x1,
-			x2,
-			y1,
-			y2,
-			i,
-			j;
+		x2,
+		y1,
+		y2,
+		i,
+		j;
 		x1 = rect.x;
 		x2 = rect.x + rect.w;
 		y1 = rect.y;
@@ -335,6 +382,59 @@ var levelGenerator = {
 			}
 		}
 	},
+	placeApartments : function (map, rect) {
+		//assume height atleast 15
+		if (rect.h < 15)
+			return;
+		var side = ROT.RNG.getPercentage() % 2; //0 left 1 right
+		//place 3x3 apartments along some wall
+		var x,
+		y;
+
+		var dir = ROT.RNG.getPercentage() % 2;
+		if (dir == 0) { //LEFT
+			x = rect.x;
+			for (var i = 0; i < rect.h / 4 - 1; i++) { //Each apartment
+				y = rect.y + 1 + 4 * i;
+				for (var ix = x + 1; ix < x + 4; ix++) { //inside
+					for (var iy = y; iy < y + 3; iy++) {
+						map[ix][iy] = T_INDOORS;
+					}
+				}
+				//door
+				map[x][y + 1] = T_DOOR;
+			}
+		}
+		if (dir == 1) { //RIGHT
+			x = rect.x + rect.w - 1;
+			for (var i = 0; i < rect.h / 4 - 1; i++) { //Each apartment
+				y = rect.y + 1 + 4 * i;
+				for (var ix = x - 1; ix > x - 4; ix--) { //inside
+					for (var iy = y; iy < y + 3; iy++) {
+						map[ix][iy] = T_INDOORS;
+					}
+				}
+				//door
+				map[x][y + 1] = T_DOOR;
+			}
+		}
+	},
+	placePrefab : function (map, x, y, prefab) {
+		console.log("placing prefab");
+		var w,
+		h,
+		i,
+		j;
+		w = prefab.width;
+		h = prefab.height;
+		for (i = 0; i < w; i++) {
+			for (j = 0; j < h; j++) {
+				if(prefab.mapdata[j][i])
+					map[x + i][y + j] = prefab.mapdata[j][i];
+			}
+		}
+		return;
+	},
 	//Subroutines, operate on tilelevel data
 	placeExits : function (level, desc) {
 		var exits = desc.exits;
@@ -348,7 +448,7 @@ var levelGenerator = {
 			}
 		}
 	},
-	placeStart : function (level,bsp){
+	placeStart : function (level, bsp) {
 		level.startX = 2;
 		level.startY = bsp.mainRoad.y1;
 	},
@@ -365,9 +465,14 @@ var levelGenerator = {
 			if (!(key in level.tiles))
 				return false;
 			var tile = level.tiles[key];
-			if (tile.type == "floor") {
-				return true;
-			} else {
+			try {
+				if (tile.blockslos || !tile.walkable) {
+					return false;
+				} else {
+					return true;
+				}
+			} catch (e) {
+				console.log(key);
 				return false;
 			}
 		};
@@ -466,7 +571,7 @@ BSP.prototype = {
 				this.split(downnode);
 			} else {
 				this.nodes.add(node);
-				
+
 			}
 		}
 
