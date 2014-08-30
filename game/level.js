@@ -40,6 +40,8 @@ TileLevel.prototype = {
 	tiles: null,
 	w: null,
 	h: null,
+	startX: 0,
+	startY: 0,
 	actors: null,
 	guards: null,
 	
@@ -119,13 +121,13 @@ TileLevel.prototype = {
 		var g = null;
 		var i;
 		for (i = 0; i < guards; i++) {
-			p = Util.findFree(this, 15);		
+			p = Util.findFree(this, 15, this.startX, this.startY);		
 			g = new Guard(p.x, p.y);		
 			this.actors.add(g);
 			this.guards.add(g);
 		}
 		if(lord){
-			p = Util.findFree(this,40);
+			p = Util.findFree(this,40,this.startX, this.startY);
 			this.lord = new Lord(p.x, p.y);
 			this.actors.add(this.lord);
 		}

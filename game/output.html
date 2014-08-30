@@ -11,8 +11,9 @@
 		<script src="heat.js"></script>
 		<script src="util.js"></script>
 		<script src="level.js"></script>
-		<script src="prefabs.js"></script>
+		
 		<script src="template.js"></script>
+		<script src="prefabs.js"></script>
 		<script src="generator.js"></script>
 		
 		<script src="render.js"></script>
@@ -34,8 +35,11 @@
 			window.onload = function(){
 				var world = new worldGraph();
 				world.generate();
-				for(l in world.levels){
+				console.log("start draw");
+				console.log(world.levels.length);
+				for(var l = 0; l < world.levels.length; l++){
 					var level = world.levels[l];
+					console.log(level);
 					var canvas = document.getElementById('output'+l);
 					var context = canvas.getContext('2d');
 					

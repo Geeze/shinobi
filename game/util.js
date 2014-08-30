@@ -23,6 +23,13 @@ var Util = {
 				return true;
 
 	},
+	coinFlip : function () {
+		if (ROT.RNG.getPercentage() % 2) {
+			return true;
+		} else
+			return false;
+
+	},
 
 	/*
 	Util.lightPasses(): used for Field of View
@@ -60,7 +67,7 @@ var Util = {
 	/*
 	Finds a random free point on the level
 	 */
-	findFree : function (level, avoid) {
+	findFree : function (level, avoid, x, y) {
 		var l;
 		if (arguments.length === 0) {
 			l = Game.level;
@@ -76,11 +83,11 @@ var Util = {
 			pY = ROT.RNG.getUniform() * (l.h - 2) + 1;
 			pX = Math.floor(pX);
 			pY = Math.floor(pY);
-			if (arguments.length < 2 || Game.player === null) {
+			if (arguments.length < 4 ) {
 				avoid = 0;
 				dist = 1;
 			} else {
-				dist = this.distance(Game.player, {
+				dist = this.distance({x:x,y:y}, {
 						x : pX,
 						y : pY
 					});
@@ -181,7 +188,7 @@ var Util = {
 			};
 		}
 	},
-	randInt : function(a, b) {
+	randInt : function (a, b) {
 		return a + Math.floor(Math.random() * (++b - a));
 	},
 	//FOR [x,y] pairs

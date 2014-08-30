@@ -12,7 +12,7 @@ a class for handling the overall map structure.
 each level is generated separately from each other but still adhere to guidelines set by worldGraph
  */
 var worldGraph = function () {
-	this.leveld = {};
+	this.leveld = [];
 	this.leveld[0] = new levelDescriptor(0, [1], "village", null);
 	this.leveld[1] = new levelDescriptor(1, [2], "village", null);
 	this.leveld[2] = new levelDescriptor(2, [3], "village", null);
@@ -21,6 +21,15 @@ var worldGraph = function () {
 	this.leveld[5] = new levelDescriptor(5, [6], "village", null);
 	this.leveld[6] = new levelDescriptor(6, [7], "village", null);
 	this.leveld[7] = new levelDescriptor(7, [], "village", null);
+	this.leveld.forEach(function (d) {
+		d.buildingList = [
+			Templates.hut, 
+			Templates.housing,
+			Templates.alley2,
+			Templates.alley3,
+			Templates.crossway
+		];
+	});
 };
 
 worldGraph.prototype = {
@@ -33,9 +42,9 @@ worldGraph.prototype = {
 	generates all levels and stores them to this.levels
 	 */
 	generate : function () {
-		this.levels = {};
+		this.levels = [];
 		var desc;
-		for (var i in this.leveld) {
+		for (var i = 0; i < this.leveld.length; i++) {
 			desc = this.leveld[i]; //get the description
 			var lvl = new TileLevel(100, 100); //create a blank level
 
@@ -43,6 +52,7 @@ worldGraph.prototype = {
 			this.levels[i] = lvl; //add that level to this.levels
 
 		}
+		console.log("LEVELS ARE DONE");
 	}
 };
 
@@ -61,6 +71,7 @@ levelDescriptor.prototype = {
 
 	place : null, //[x,y]
 	exits : [], //N,S,W,E
+	buildingList : [],
 	type : null,
 	goals : []
 };
@@ -111,11 +122,7 @@ var levelGenerator = {
 
 		gen.create(digCallback);
 		//Handle descriptor
-		if (arguments.length > 0) {
-			var exit = desc.exits[0];
-			var p = Util.findFree(level);
-
-		}
+		
 	},
 	/*
 	A test at supplementing my own generator
@@ -152,7 +159,7 @@ var levelGenerator = {
 			self.placeRoad(map, e.x1, e.y1, e.x2, e.y2, e.width);
 		});
 		//Do stuff to areas
-		console.log("RECT");
+		
 		bsp.nodes.forEach(function (n) {
 			//If area next to level border dont do anything
 			if (n.bottom.width === 0 || n.right.width === 0 || n.left.width === 0 || n.top.width === 0)
@@ -160,18 +167,25 @@ var levelGenerator = {
 			var r = nodeToRect(n);
 			try {
 				//Prefabs
-				if (r.w > 12 && r.h > 12) {
-
-					self.placePrefab(map, r.x, r.y, rotatedTemplate(Templates.housing, r.w, r.h, Util.randInt(0, 3), false));
-					throw "Template";
-
+				
+				var templates = [];
+				var t;
+				for(var i = 0; i < desc.buildingList.length; i++){
+					t = desc.buildingList[i];
+					if((!t.maxwidth || t.maxwidth >= Math.max(r.w, r.h)) && (!t.maxheight || t.maxheight >= Math.max(r.w, r.h)))
+						if(t.width <= Math.min(r.w, r.h) && t.height <= Math.min(r.w, r.h)){
+							templates.push(t);
+						}
 				}
-				if ((r.w == 10 || r.w == 9) && (r.h == 10 || r.h == 9)) {
-					self.placePrefab(map, r.x, r.y, TemplateNobleHouse);
+				if(ROT.RNG.getUniform() < 0.6)
+				if (templates.length != 0) {
+					var template = templates[ROT.RNG.getPercentage() % templates.length];
+					self.placePrefab(map, r.x, r.y, rotatedTemplate(template, r.w, r.h, Util.randInt(0, 3), Util.coinFlip()));
 					throw "Template";
 				}
 
 				//Generic options
+				/*
 				if (r.w < 15 && r.h < 15) {
 					self.placeHut(map, r.x, r.y, r.w, r.h);
 					throw "Hut";
@@ -186,10 +200,9 @@ var levelGenerator = {
 					}
 
 				}
-
+				*/
 			} catch (e) {
 				//Do nothing
-
 			}
 		});
 
@@ -261,7 +274,8 @@ var levelGenerator = {
 					shadow : true
 				};
 			}
-			if(!tile) throw xx + "," + yy + "," + value;
+			if (!tile)
+				throw xx + "," + yy + "," + value;
 			level.tiles[xx + "," + yy] = tile; //assign tile to array
 		};
 
@@ -392,7 +406,7 @@ var levelGenerator = {
 		y;
 
 		var dir = ROT.RNG.getPercentage() % 2;
-		if (dir == 0) { //LEFT
+		if (dir === 0) { //LEFT
 			x = rect.x;
 			for (var i = 0; i < rect.h / 4 - 1; i++) { //Each apartment
 				y = rect.y + 1 + 4 * i;
@@ -429,8 +443,12 @@ var levelGenerator = {
 		h = prefab.height;
 		for (i = 0; i < w; i++) {
 			for (j = 0; j < h; j++) {
-				if(prefab.mapdata[j][i])
+				if (prefab.mapdata[j][i] != undefined)
 					map[x + i][y + j] = prefab.mapdata[j][i];
+				if (prefab.mapdata[j][i] == 0)
+					console.log("PREFFAB: " + prefab.mapdata[j][i]);
+				if (map[x + i][y + j] == 0)
+					console.log("MAPDATA:" + map[x + i][y + j]);
 			}
 		}
 		return;
@@ -454,8 +472,7 @@ var levelGenerator = {
 	},
 	//bakes the shadows in the level
 	placeShadows : function (level) {
-		var tile,
-		comparedTile;
+		var tile;
 
 		//lightPasses copied from util.js
 		var lightPasses = function (x, y) {
@@ -472,7 +489,7 @@ var levelGenerator = {
 					return true;
 				}
 			} catch (e) {
-				console.log(key);
+				console.log(key + "undefined");
 				return false;
 			}
 		};

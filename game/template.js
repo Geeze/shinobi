@@ -10,18 +10,18 @@ mapdata = [][]
 var scaleTemplate = function (template, w, h) {
 	//Bring variables from template
 	var sliceX = template.sliceX,
-	sliceY = template.sliceY;
+		sliceY = template.sliceY;
 	var scaleX = template.scaleX,
-	scaleY = template.scaleY;
+		scaleY = template.scaleY;
 	var modeX = template.modeX,
-	modeY = template.modeY;
+		modeY = template.modeY;
 	//Mapdatas
 	var oldMap = template.mapdata;
 	var newMap = [];
 	for (i = 0; i < h; i++) {
 		newMap[i] = [];
 	}
-	console.log(newMap);
+	
 	//Arrays that hold first index of each slice
 	var indexX = [],
 	indexY = [];
@@ -42,13 +42,13 @@ var scaleTemplate = function (template, w, h) {
 
 	//Misc. variables. some hoisting, nothing to worry
 	var i,
-	j,
-	ii,
-	jj,
-	px,
-	py,
-	oldx,
-	oldy;
+		j,
+		ii,
+		jj,
+		px,
+		py,
+		oldx,
+		oldy;
 
 	//Expansion part
 	while (scaleTotal(newSliceX) < w) {
@@ -94,8 +94,9 @@ var scaleTemplate = function (template, w, h) {
 					else
 						oldy = indexY[j] + Math.floor(jj * (sliceY[j] / newSliceY[j]));
 					//Important
-
+					
 					newMap[py][px] = oldMap[oldy][oldx];
+					if(newMap[py][px] == undefined){throw "unsdefined" + "," + px + "," + py;}
 					py++;
 				}
 			}
@@ -143,22 +144,19 @@ var rotatedTemplate = function (template, w, h, rotation, flipped) {
 				if (rotation === 0) { //its upwards
 
 					ii = flipped ? (w - i - 1) : i;
-					//console.log(j + ii);
+					
 					newMap[j][i] = oldTemplate.mapdata[j][ii];
 
 				}
 				if (rotation == 2) { //Down
 					ii = flipped ? i : (w - i - 1);
 					jj = h - j - 1;
-					//console.log((h - j - 1) + (ii));
 					newMap[j][i] = oldTemplate.mapdata[jj][ii];
 
 				}
 				if (rotation == 1) { //Right
 					jj = flipped ? (h - j - 1) : j;
-					ii = w - i - 1
-					//console.log((w - i - 1) + (jj));
-
+					ii = w - i - 1;
 					newMap[j][i] = oldTemplate.mapdata[ii][jj];
 
 				}
@@ -167,21 +165,14 @@ var rotatedTemplate = function (template, w, h, rotation, flipped) {
 					//console.log(i + jj);
 					newMap[j][i] = oldTemplate.mapdata[i][jj];
 				}
+				if(newMap[j][i] == 0) throw i + "," + j + " is 0";
 			} catch (e) {
-				console.log((w - i - 1) + "," + (h-j-i));
-				console.log(w + "," + h);
-				console.log("jj" + jj);
+				console.log(e);
 				
-				console.log(newMap[j]);
-				console.log("old");
-				console.log(oldTemplate.mapdata);
-				console.log("new");
-				console.log(newMap);
-				throw e;
 			}
 		}
 	}
-	
+
 	return {
 		width : w,
 		height : h,
